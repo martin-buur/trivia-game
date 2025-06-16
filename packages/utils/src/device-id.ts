@@ -7,7 +7,7 @@ export function getDeviceId(): string {
   if (storedId) {
     return storedId;
   }
-  
+
   const newId = generateDeviceId();
   localStorage.setItem('deviceId', newId);
   return newId;

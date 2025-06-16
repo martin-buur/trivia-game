@@ -12,11 +12,6 @@ const createSessionSchema = z.object({
   questionPackId: z.string().uuid(),
 });
 
-// Join session schema
-const joinSessionSchema = z.object({
-  code: z.string().length(6),
-});
-
 // Create a new session
 sessionsRoute.post('/', async (c) => {
   try {
@@ -66,7 +61,10 @@ sessionsRoute.post('/', async (c) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return c.json({ error: 'Invalid request data', details: error.errors }, 400);
+      return c.json(
+        { error: 'Invalid request data', details: error.errors },
+        400
+      );
     }
     console.error('Error creating session:', error);
     return c.json({ error: 'Failed to create session' }, 500);

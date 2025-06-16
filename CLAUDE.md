@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Status
 
 ### ✅ Completed
+
 - Turbo monorepo structure initialized
 - Project documentation created (PRD.md, TASKS.md, STYLING.md)
 - Git repository set up with proper .gitignore
@@ -36,18 +37,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - Turbo build pipeline working end-to-end
   - Individual package builds work in isolation
   - API test setup fixed with proper PGlite typing
+- **Code quality tooling configured**:
+  - ESLint 9 with flat config setup for the entire monorepo
+  - Prettier configured for consistent code formatting
+  - All packages have lint scripts integrated with Turbo
 
 ### 🚀 Next Steps
-1. **ESLint Configuration**: Set up ESLint configuration files for linting (currently missing)
-2. **Player Management API**: Implement player join/leave endpoints
-3. **Game Flow API**: Questions, answers, scoring endpoints
-4. **Real-time Integration**: Set up Supabase Realtime subscriptions
-5. **Frontend Components**: Build UI components for host and player views
-6. **State Management**: Implement Zustand stores for game state
+
+1. **Player Management API**: Implement player join/leave endpoints
+2. **Game Flow API**: Questions, answers, scoring endpoints
+3. **Real-time Integration**: Set up Supabase Realtime subscriptions
+4. **Frontend Components**: Build UI components for host and player views
+5. **State Management**: Implement Zustand stores for game state
 
 ## Project Overview
 
 This is a real-time multiplayer trivia game built with:
+
 - **Frontend**: Vite + React + TypeScript + Tailwind CSS (unified app for both host and player views)
 - **Backend**: Hono + Drizzle ORM + PGlite (local) / Supabase (production) + PostgreSQL
 - **Architecture**: Turbo monorepo with shared packages
@@ -83,9 +89,9 @@ pnpm db:migrate    # Run migrations (for production)
 # Type checking
 pnpm typecheck
 
-# Linting (Note: ESLint configuration needs to be set up)
-# pnpm lint          # Currently not working - ESLint config missing
-# pnpm lint:fix      # Currently not working - ESLint config missing
+# Linting and formatting
+pnpm lint          # Run ESLint across the monorepo
+pnpm format        # Format code with Prettier
 
 # Testing
 pnpm test
@@ -110,6 +116,7 @@ git checkout -b     # Create new branch
 ## Database Schema (Drizzle)
 
 Key tables and their relationships:
+
 - `question_packs` → `questions` (one-to-many)
 - `sessions` → `players` (one-to-many)
 - `sessions` → `question_packs` (many-to-one)
@@ -128,6 +135,7 @@ The project uses PGlite (embedded PostgreSQL) for local development and Supabase
 - **Filesystem Persistence**: Database persists in `.pglite/data` directory
 
 ### First Time Setup
+
 ```bash
 # Install dependencies
 pnpm install
@@ -143,6 +151,7 @@ pnpm dev
 ```
 
 ### Database Reset
+
 ```bash
 # Delete local database and start fresh
 rm -rf .pglite
@@ -151,12 +160,14 @@ pnpm db:seed
 ```
 
 The database client automatically detects the environment:
+
 - `NODE_ENV !== 'production'` → Uses PGlite (`.pglite/data`)
 - `NODE_ENV === 'production'` → Uses Supabase PostgreSQL
 
 ## Real-time Event Patterns
 
 Subscribe to Supabase channels using consistent naming:
+
 - Channel: `session:${sessionCode}`
 - Events: `player_joined`, `game_started`, `question_revealed`, `answer_submitted`, `scores_updated`
 
@@ -175,18 +186,36 @@ Subscribe to Supabase channels using consistent naming:
 - E2E tests for critical user flows (create game, join game, answer question)
 - Load tests to ensure 100+ concurrent players work smoothly
 
+## Code Quality Requirements
+
+**IMPORTANT**: Before completing any coding task, you MUST:
+
+1. Run `pnpm lint` to check for linting errors
+2. Run `pnpm format` to format code with Prettier
+3. Run `pnpm typecheck` to ensure no TypeScript errors
+4. Fix any issues found before considering the task complete
+
+The project uses:
+
+- ESLint 9 with flat config format (eslint.config.js)
+- Prettier for consistent code formatting
+- TypeScript strict mode for type safety
+
 ## Context7 MCP Usage
 
 Context7 MCP is available for looking up documentation for libraries and frameworks used in this project. Use it to:
+
 - Find up-to-date API documentation for Hono, Drizzle ORM, Supabase, React Router, Zustand, etc.
 - Get implementation examples and best practices
 - Resolve library-specific issues
 
 To use Context7:
+
 1. First call `mcp__context7__resolve-library-id` with the library name to get the Context7-compatible ID
 2. Then call `mcp__context7__get-library-docs` with that ID to retrieve documentation
 
 Example libraries to reference:
+
 - Hono (backend framework)
 - Drizzle ORM (database)
 - Supabase (auth, database, realtime)

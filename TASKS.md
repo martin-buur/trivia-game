@@ -3,13 +3,16 @@
 ## Current Sprint - Next Steps
 
 ### Immediate Tasks (Priority: High)
+
 1. **Frontend Setup (apps/web)** ✅
+
    - [x] Initialize Vite + React + TypeScript ✅
    - [x] Install and configure Tailwind CSS v4 ✅
    - [x] Create base routing structure (React Router) ✅
    - [ ] Set up basic layout components
 
 2. **Backend Setup (apps/api)** ✅
+
    - [x] Initialize Hono server ✅
    - [x] Set up TypeScript configuration ✅
    - [x] Create basic health check endpoint ✅
@@ -21,7 +24,9 @@
    - [x] Set up @trivia/db package with Drizzle ORM ✅
 
 ### Next Priority Tasks
+
 1. **Supabase Integration** ✅
+
    - [x] Create Supabase project ✅
    - [x] Add credentials to .env file ✅
    - [x] Test database connection ✅
@@ -36,6 +41,7 @@
 ## Phase 1: MVP Setup & Core Features
 
 ### 1. Project Setup
+
 - [x] Initialize Turbo monorepo structure ✅
 - [x] Create project documentation (PRD.md, TASKS.md, CLAUDE.md) ✅
 - [x] Set up Git repository ✅
@@ -45,6 +51,7 @@
 - [x] Configure environment variables ✅
 
 ### 2. Database Setup ✅
+
 - [x] Set up Supabase project ✅
 - [x] Create Drizzle schema for all tables ✅
 - [x] Push schema to database ✅
@@ -52,6 +59,7 @@
 - [x] Set up Drizzle ORM configuration with relations ✅
 
 ### 3. Backend API (Hono) (In Progress)
+
 - [x] Session management endpoints
   - [x] POST /sessions - Create new session ✅
   - [x] GET /sessions/:code - Get session details ✅
@@ -67,12 +75,14 @@
 - [ ] Real-time WebSocket setup with Supabase
 
 ### 4. Frontend Foundation
+
 - [x] Set up Vite + React + Tailwind ✅
 - [x] Create routing structure ✅
 - [ ] Design component library (Button, Card, Modal, etc.)
 - [ ] Implement responsive layout system
 
 ### 5. Core Game Flow
+
 - [ ] Homepage with Create/Join options
 - [ ] Host view
   - [ ] Session creation with pack selection
@@ -80,7 +90,7 @@
   - [ ] Question display with timer
   - [ ] Score leaderboard
   - [ ] Game controls (next, pause, end)
-- [ ] Player view  
+- [ ] Player view
   - [ ] Join screen with code input
   - [ ] Name entry and customization
   - [ ] Answer selection interface
@@ -88,6 +98,7 @@
   - [ ] Waiting screens between questions
 
 ### 6. Real-time Features
+
 - [ ] Implement Supabase Realtime subscriptions
 - [ ] Player join/leave notifications
 - [ ] Synchronized timers
@@ -95,6 +106,7 @@
 - [ ] Connection status indicators
 
 ### 7. Testing & Polish
+
 - [ ] Unit tests for critical functions
 - [ ] Integration tests for API endpoints
 - [ ] Load testing with 50+ concurrent players
@@ -102,6 +114,7 @@
 - [ ] Error handling and reconnection logic
 
 ## Phase 2: Enhanced Question Types
+
 - [ ] True/False questions
 - [ ] Image-based questions
 - [ ] Multiple correct answers
@@ -110,6 +123,7 @@
 - [ ] Bonus/penalty scoring system
 
 ## Phase 3: User-Generated Content
+
 - [ ] Question pack creator interface
 - [ ] Pack sharing system
 - [ ] Moderation tools
@@ -117,6 +131,7 @@
 - [ ] Public pack marketplace
 
 ## Phase 4: Advanced Features
+
 - [ ] Team mode
 - [ ] Tournament brackets
 - [ ] Achievements/badges

@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+.turbo/
+coverage/
+
+# Database
+.pglite/
+drizzle/
+
+# Environment files
+.env*
+
+# Generated files
+*.generated.*
+generated/
+
+# Public assets
+public/
+
+# Package manager files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock

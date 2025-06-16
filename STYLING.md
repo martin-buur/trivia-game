@@ -1,6 +1,7 @@
 # Styling Guide - Trivia Game (Tailwind v4)
 
 ## Design Philosophy
+
 - **Bright & Playful**: Bold colors that create excitement
 - **Accessibility First**: Large text, high contrast, clear hierarchy
 - **Art-Ready**: Placeholder system that can easily swap in real assets
@@ -9,28 +10,29 @@
 ## Tailwind v4 Configuration
 
 ### CSS-based Configuration (app.css)
+
 ```css
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   /* Custom Colors */
-  --color-primary: #8B5CF6;
-  --color-primary-light: #A78BFA;
-  --color-primary-dark: #7C3AED;
-  
-  --color-accent-pink: #EC4899;
-  --color-accent-blue: #3B82F6;
-  --color-accent-green: #84CC16;
-  --color-accent-orange: #F97316;
-  --color-accent-yellow: #FDE047;
-  --color-accent-red: #EF4444;
-  
+  --color-primary: #8b5cf6;
+  --color-primary-light: #a78bfa;
+  --color-primary-dark: #7c3aed;
+
+  --color-accent-pink: #ec4899;
+  --color-accent-blue: #3b82f6;
+  --color-accent-green: #84cc16;
+  --color-accent-orange: #f97316;
+  --color-accent-yellow: #fde047;
+  --color-accent-red: #ef4444;
+
   /* Player Colors */
-  --color-player-1: #3B82F6;
-  --color-player-2: #F97316;
-  --color-player-3: #10B981;
-  --color-player-4: #EC4899;
-  
+  --color-player-1: #3b82f6;
+  --color-player-2: #f97316;
+  --color-player-3: #10b981;
+  --color-player-4: #ec4899;
+
   /* Animations */
   --animate-bounce-slow: bounce 3s infinite;
   --animate-pulse-slow: pulse 3s infinite;
@@ -40,74 +42,88 @@
 
 /* Custom Keyframes */
 @keyframes popIn {
-  0% { 
-    transform: scale(0.8); 
+  0% {
+    transform: scale(0.8);
     opacity: 0;
   }
-  90% { 
+  90% {
     transform: scale(1.05);
   }
-  100% { 
-    transform: scale(1); 
+  100% {
+    transform: scale(1);
     opacity: 1;
   }
 }
 
 @keyframes slideUp {
-  0% { 
-    transform: translateY(30px); 
+  0% {
+    transform: translateY(30px);
     opacity: 0;
   }
-  100% { 
-    transform: translateY(0); 
+  100% {
+    transform: translateY(0);
     opacity: 1;
   }
 }
 ```
 
 ### Using Custom Properties in Components
+
 With Tailwind v4, you can use the custom properties directly:
+
 ```html
 <!-- Using custom colors -->
 <div class="bg-[--color-primary] text-white">
-<div class="bg-[--color-player-1]">
-<div class="animate-[--animate-pop-in]">
+  <div class="bg-[--color-player-1]">
+    <div class="animate-[--animate-pop-in]"></div>
+  </div>
+</div>
 ```
 
 ## Component Classes
 
 ### Buttons
+
 ```html
 <!-- Primary Button -->
-<button class="px-8 py-4 text-xl font-bold text-white rounded-2xl 
+<button
+  class="px-8 py-4 text-xl font-bold text-white rounded-2xl 
                bg-gradient-to-r from-accent-orange to-accent-pink
                transform transition-all duration-200 hover:scale-105 active:scale-95
-               shadow-lg hover:shadow-xl">
+               shadow-lg hover:shadow-xl"
+>
   Create Game
 </button>
 
 <!-- Secondary Button -->
-<button class="px-8 py-4 text-xl font-bold rounded-2xl 
+<button
+  class="px-8 py-4 text-xl font-bold rounded-2xl 
                bg-white text-primary border-4 border-primary
-               transform transition-all duration-200 hover:scale-105 active:scale-95">
+               transform transition-all duration-200 hover:scale-105 active:scale-95"
+>
   Join Game
 </button>
 ```
 
 ### Cards
+
 ```html
 <!-- Game Card -->
-<div class="rounded-3xl p-8 shadow-2xl backdrop-blur-sm
-            bg-white/90 border-4 border-primary/20">
+<div
+  class="rounded-3xl p-8 shadow-2xl backdrop-blur-sm
+            bg-white/90 border-4 border-primary/20"
+>
   <!-- Content -->
 </div>
 
 <!-- Answer Option -->
-<button class="w-full rounded-2xl p-6 text-xl font-semibold
+<button
+  class="w-full rounded-2xl p-6 text-xl font-semibold
                bg-white/80 border-4 border-transparent
                transform transition-all duration-200 hover:scale-105
                hover:border-primary hover:bg-white
-               focus:outline-none focus:ring-4 focus:ring-primary/50">
+               focus:outline-none focus:ring-4 focus:ring-primary/50"
+>
   Answer Text
 </button>
 ```
@@ -115,65 +131,75 @@ With Tailwind v4, you can use the custom properties directly:
 ## Placeholder Avatars
 
 ### Using Tailwind Classes
+
 ```tsx
 // Avatar component with geometric shapes
 const avatarStyles = {
-  circle: "rounded-full",
-  square: "rounded-2xl",
-  hexagon: "mask mask-hexagon", // requires tailwind-mask plugin
-  star: "mask mask-star",
-  diamond: "rotate-45 rounded-lg"
+  circle: 'rounded-full',
+  square: 'rounded-2xl',
+  hexagon: 'mask mask-hexagon', // requires tailwind-mask plugin
+  star: 'mask mask-star',
+  diamond: 'rotate-45 rounded-lg',
 };
 
 const avatarColors = [
-  "bg-player-1",
-  "bg-player-2", 
-  "bg-player-3",
-  "bg-player-4",
-  "bg-gradient-to-br from-accent-pink to-accent-orange",
-  "bg-gradient-to-br from-accent-blue to-primary",
+  'bg-player-1',
+  'bg-player-2',
+  'bg-player-3',
+  'bg-player-4',
+  'bg-gradient-to-br from-accent-pink to-accent-orange',
+  'bg-gradient-to-br from-accent-blue to-primary',
 ];
 
 // Usage
-<div className={`w-20 h-20 ${avatarStyles.circle} ${avatarColors[0]} 
+<div
+  className={`w-20 h-20 ${avatarStyles.circle} ${avatarColors[0]} 
                 flex items-center justify-center text-white text-3xl font-bold
-                shadow-lg`}>
+                shadow-lg`}
+>
   {playerInitial}
-</div>
+</div>;
 ```
 
 ### Emoji Avatars
+
 ```tsx
-<div className="w-20 h-20 rounded-full bg-white shadow-lg
-                flex items-center justify-center text-5xl">
+<div
+  className="w-20 h-20 rounded-full bg-white shadow-lg
+                flex items-center justify-center text-5xl"
+>
   {playerEmoji}
 </div>
 ```
 
 ## Host Character Placeholder
+
 ```html
 <!-- Animated host circle -->
 <div class="relative mx-auto w-48">
-  <div class="w-32 h-32 mx-auto rounded-full 
+  <div
+    class="w-32 h-32 mx-auto rounded-full 
               bg-gradient-to-br from-accent-orange to-accent-pink
               shadow-2xl shadow-accent-orange/50
-              animate-bounce-slow"></div>
-  
+              animate-bounce-slow"
+  ></div>
+
   <!-- Speech bubble -->
-  <div class="absolute -top-16 left-1/2 -translate-x-1/2
+  <div
+    class="absolute -top-16 left-1/2 -translate-x-1/2
               bg-white rounded-3xl px-6 py-3 shadow-xl
-              animate-pulse-slow">
+              animate-pulse-slow"
+  >
     <p class="text-heading text-center">Welcome!</p>
   </div>
 </div>
 ```
 
 ## Responsive Text Utilities
+
 ```html
 <!-- Session code display -->
-<h1 class="text-6xl md:text-7xl lg:text-8xl font-black text-primary">
-  ABC123
-</h1>
+<h1 class="text-6xl md:text-7xl lg:text-8xl font-black text-primary">ABC123</h1>
 
 <!-- Question text -->
 <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800">
@@ -181,12 +207,11 @@ const avatarColors = [
 </h2>
 
 <!-- Body text -->
-<p class="text-lg md:text-xl text-gray-700">
-  Choose your answer below
-</p>
+<p class="text-lg md:text-xl text-gray-700">Choose your answer below</p>
 ```
 
 ## Animation Utilities
+
 ```html
 <!-- Entrance animations -->
 <div class="animate-slide-up">Content slides up on mount</div>
@@ -201,18 +226,20 @@ const avatarColors = [
 ```
 
 ## Accessibility Classes
+
 ```html
 <!-- Focus states -->
 <button class="... focus:outline-none focus:ring-4 focus:ring-primary/50">
+  <!-- Screen reader only -->
+  <span class="sr-only">Loading...</span>
 
-<!-- Screen reader only -->
-<span class="sr-only">Loading...</span>
-
-<!-- Reduced motion -->
-<div class="motion-safe:animate-bounce motion-reduce:animate-none">
+  <!-- Reduced motion -->
+  <div class="motion-safe:animate-bounce motion-reduce:animate-none"></div>
+</button>
 ```
 
 ## Future Art Integration
+
 ```tsx
 // Component ready for art assets
 interface AvatarProps {
@@ -221,11 +248,11 @@ interface AvatarProps {
   playerColor: number;
 }
 
-<Avatar 
+<Avatar
   imageUrl={player.avatarUrl}
   fallback="geometric"
   playerColor={playerIndex}
-/>
+/>;
 
 // When art is available, component switches from placeholder to image
 ```

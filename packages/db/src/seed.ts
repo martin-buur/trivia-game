@@ -102,7 +102,12 @@ async function seed() {
       {
         packId: popCulture.id,
         question: 'Who is the lead singer of Queen?',
-        options: ['Freddie Mercury', 'Brian May', 'Roger Taylor', 'John Deacon'],
+        options: [
+          'Freddie Mercury',
+          'Brian May',
+          'Roger Taylor',
+          'John Deacon',
+        ],
         correctAnswerIndex: 0,
         timeLimit: 15,
       },
@@ -123,7 +128,12 @@ async function seed() {
       {
         packId: popCulture.id,
         question: 'What is the highest-grossing film of all time?',
-        options: ['Avengers: Endgame', 'Avatar', 'Titanic', 'Star Wars: The Force Awakens'],
+        options: [
+          'Avengers: Endgame',
+          'Avatar',
+          'Titanic',
+          'Star Wars: The Force Awakens',
+        ],
         correctAnswerIndex: 1,
         timeLimit: 20,
       },
@@ -146,20 +156,30 @@ async function seed() {
       {
         packId: science.id,
         question: 'What is the speed of light in vacuum?',
-        options: ['299,792 km/s', '199,792 km/s', '399,792 km/s', '99,792 km/s'],
+        options: [
+          '299,792 km/s',
+          '199,792 km/s',
+          '399,792 km/s',
+          '99,792 km/s',
+        ],
         correctAnswerIndex: 0,
         timeLimit: 30,
       },
       {
         packId: science.id,
         question: 'What is the powerhouse of the cell?',
-        options: ['Nucleus', 'Ribosome', 'Mitochondria', 'Endoplasmic Reticulum'],
+        options: [
+          'Nucleus',
+          'Ribosome',
+          'Mitochondria',
+          'Endoplasmic Reticulum',
+        ],
         correctAnswerIndex: 2,
         timeLimit: 20,
       },
       {
         packId: science.id,
-        question: 'What is the most abundant gas in Earth\'s atmosphere?',
+        question: "What is the most abundant gas in Earth's atmosphere?",
         options: ['Oxygen', 'Carbon Dioxide', 'Hydrogen', 'Nitrogen'],
         correctAnswerIndex: 3,
         timeLimit: 20,
@@ -176,14 +196,24 @@ async function seed() {
       {
         packId: history.id,
         question: 'Who was the first President of the United States?',
-        options: ['Thomas Jefferson', 'George Washington', 'John Adams', 'Benjamin Franklin'],
+        options: [
+          'Thomas Jefferson',
+          'George Washington',
+          'John Adams',
+          'Benjamin Franklin',
+        ],
         correctAnswerIndex: 1,
         timeLimit: 15,
       },
       {
         packId: history.id,
         question: 'Which ancient wonder of the world still stands today?',
-        options: ['Colossus of Rhodes', 'Hanging Gardens', 'Great Pyramid of Giza', 'Lighthouse of Alexandria'],
+        options: [
+          'Colossus of Rhodes',
+          'Hanging Gardens',
+          'Great Pyramid of Giza',
+          'Lighthouse of Alexandria',
+        ],
         correctAnswerIndex: 2,
         timeLimit: 25,
       },
@@ -197,7 +227,12 @@ async function seed() {
       {
         packId: history.id,
         question: 'Who was the first person to walk on the moon?',
-        options: ['Buzz Aldrin', 'Neil Armstrong', 'Yuri Gagarin', 'Alan Shepard'],
+        options: [
+          'Buzz Aldrin',
+          'Neil Armstrong',
+          'Yuri Gagarin',
+          'Alan Shepard',
+        ],
         correctAnswerIndex: 1,
         timeLimit: 15,
       },
@@ -219,7 +254,7 @@ async function seed() {
       },
       {
         packId: sports.id,
-        question: 'In tennis, what is the score called when it\'s 40-40?',
+        question: "In tennis, what is the score called when it's 40-40?",
         options: ['Tie', 'Draw', 'Deuce', 'Even'],
         correctAnswerIndex: 2,
         timeLimit: 15,

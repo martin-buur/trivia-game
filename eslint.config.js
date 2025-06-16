@@ -34,6 +34,14 @@ export default [
         crypto: 'readonly',
         __dirname: 'readonly',
         __filename: 'readonly',
+        Response: 'readonly',
+        HTMLButtonElement: 'readonly',
+        HTMLDivElement: 'readonly',
+        HTMLInputElement: 'readonly',
+        HTMLElement: 'readonly',
+        Event: 'readonly',
+        KeyboardEvent: 'readonly',
+        MouseEvent: 'readonly',
       }
     },
     plugins: {

@@ -50,7 +50,7 @@ describe('Player Management API', () => {
   describe('POST /sessions/:code/players', () => {
     it('should allow a player to join a session', async () => {
       const app = createTestApp();
-      
+
       const res = await app.request('/sessions/TEST01/players', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -70,7 +70,7 @@ describe('Player Management API', () => {
 
     it('should return existing player if device already joined', async () => {
       const app = createTestApp();
-      
+
       // First join
       await app.request('/sessions/TEST01/players', {
         method: 'POST',
@@ -98,7 +98,7 @@ describe('Player Management API', () => {
 
     it('should not allow joining a non-existent session', async () => {
       const app = createTestApp();
-      
+
       const res = await app.request('/sessions/NOEXIST/players', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -121,7 +121,7 @@ describe('Player Management API', () => {
         .where(eq(sessions.code, 'TEST01'));
 
       const app = createTestApp();
-      
+
       const res = await app.request('/sessions/TEST01/players', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -138,7 +138,7 @@ describe('Player Management API', () => {
 
     it('should validate required fields', async () => {
       const app = createTestApp();
-      
+
       const res = await app.request('/sessions/TEST01/players', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -167,7 +167,7 @@ describe('Player Management API', () => {
         .returning();
 
       const app = createTestApp();
-      
+
       const res = await app.request(`/players/${player.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -183,14 +183,17 @@ describe('Player Management API', () => {
 
     it('should return 404 for non-existent player', async () => {
       const app = createTestApp();
-      
-      const res = await app.request('/players/00000000-0000-0000-0000-000000000000', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nickname: 'NewName',
-        }),
-      });
+
+      const res = await app.request(
+        '/players/00000000-0000-0000-0000-000000000000',
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nickname: 'NewName',
+          }),
+        }
+      );
 
       expect(res.status).toBe(404);
       const data = await res.json();
@@ -211,7 +214,7 @@ describe('Player Management API', () => {
         .returning();
 
       const app = createTestApp();
-      
+
       const res = await app.request(`/players/${player.id}`, {
         method: 'DELETE',
       });
@@ -227,10 +230,13 @@ describe('Player Management API', () => {
 
     it('should return 404 for non-existent player', async () => {
       const app = createTestApp();
-      
-      const res = await app.request('/players/00000000-0000-0000-0000-000000000000', {
-        method: 'DELETE',
-      });
+
+      const res = await app.request(
+        '/players/00000000-0000-0000-0000-000000000000',
+        {
+          method: 'DELETE',
+        }
+      );
 
       expect(res.status).toBe(404);
       const data = await res.json();

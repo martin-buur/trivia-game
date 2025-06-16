@@ -41,6 +41,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - ESLint 9 with flat config setup for the entire monorepo
   - Prettier configured for consistent code formatting
   - All packages have lint scripts integrated with Turbo
+- **Frontend foundation implemented**:
+  - Tailwind CSS v4 properly configured with @tailwindcss/vite plugin
+  - Custom theme with colors, animations, and design tokens
+  - Base UI components (Button, Input, Card) with responsive design
+  - API client with typed endpoints and error handling
+  - Homepage with Create/Join game options
+  - Fully responsive layout (mobile-first, scales to desktop)
 
 ### 🚀 Next Steps
 
@@ -223,3 +230,48 @@ Example libraries to reference:
 - Zustand (state management)
 - Vite (build tool)
 - Tailwind CSS v4 (styling)
+
+## Puppeteer MCP for Visual Testing
+
+Claude Code has access to Puppeteer MCP for taking screenshots and testing the UI. This is useful for:
+
+- Verifying styling changes are working correctly
+- Testing responsive layouts at different viewport sizes
+- Debugging visual issues
+- Demonstrating UI features
+
+### Common Puppeteer Commands
+
+```bash
+# Navigate to a URL
+mcp__puppeteer__puppeteer_navigate url="http://localhost:3000"
+
+# Take a screenshot (default 800x600)
+mcp__puppeteer__puppeteer_screenshot name="homepage"
+
+# Take a mobile screenshot
+mcp__puppeteer__puppeteer_screenshot name="mobile-view" width=375 height=812
+
+# Take a desktop screenshot
+mcp__puppeteer__puppeteer_screenshot name="desktop-view" width=1920 height=1080
+
+# Click an element
+mcp__puppeteer__puppeteer_click selector=".button-class"
+
+# Fill an input
+mcp__puppeteer__puppeteer_fill selector="#input-id" value="text"
+
+# Execute JavaScript
+mcp__puppeteer__puppeteer_evaluate script="document.querySelector('.class').click()"
+```
+
+### Testing Responsive Design
+
+When building responsive features, test at these common viewport sizes:
+
+- **Mobile**: 375x812 (iPhone 12/13/14)
+- **Tablet**: 768x1024 (iPad)
+- **Desktop**: 1920x1080 (Full HD)
+- **Large Desktop**: 2560x1440 (2K)
+
+Always ensure the development server is running (`pnpm dev`) before using Puppeteer commands.

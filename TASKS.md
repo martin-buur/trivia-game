@@ -3,6 +3,7 @@
 ## POC Tasks (Current Priority)
 
 ### ✅ Completed
+
 - [x] Initialize Turbo monorepo structure
 - [x] Create project documentation (PRD.md, TASKS.md, CLAUDE.md)
 - [x] Set up Git repository
@@ -15,16 +16,20 @@
 - [x] Question packs endpoint
 - [x] Player management endpoints (join, update, leave)
 - [x] Basic routing structure with React Router
+- [x] Frontend Foundation
+  - [x] Tailwind CSS v4 setup with @tailwindcss/vite
+  - [x] Custom theme configuration (colors, animations)
+  - [x] Create shared UI components (Button, Input, Card)
+  - [x] API client utilities with error handling
+  - [x] Device ID generation available in @trivia/utils
+  - [x] Fully responsive homepage with Create/Join options
+  - [x] Mobile-first responsive design system
 
-### 🚧 In Progress - Frontend Foundation
-- [ ] Create shared UI components (Button, Input, Card)
-- [ ] API client utilities with error handling
-- [ ] Device ID generation and storage
-
-### 📋 Next Up - Core Game Flow
+### 🚧 In Progress - Core Game Flow
 
 #### 1. Homepage & Game Creation
-- [ ] Homepage with Create/Join buttons
+
+- [x] Homepage with Create/Join buttons
 - [ ] Host game creation flow
   - [ ] Fetch and display question packs
   - [ ] Create session via API
@@ -35,6 +40,7 @@
   - [ ] Join via API
 
 #### 2. Basic Game Views
+
 - [ ] Host lobby (show code, players, start button)
 - [ ] Player waiting room
 - [ ] Simple question display (no timer yet)
@@ -42,6 +48,7 @@
 - [ ] Basic score display
 
 #### 3. Game State Management
+
 - [ ] Question/Answer flow endpoints
   - [ ] GET /sessions/:code/current-question
   - [ ] POST /players/:id/answer
@@ -50,6 +57,7 @@
 - [ ] End game and show final scores
 
 ### 🎯 POC Success Criteria
+
 - Host can create a game with a question pack
 - Players can join with a code
 - Host can start game and advance through questions
@@ -62,6 +70,7 @@
 ## Production Ready Tasks (Future)
 
 ### Security & Performance
+
 - [ ] Device ID verification for player updates/deletes
 - [ ] Rate limiting on API endpoints
 - [ ] Session player limits
@@ -72,6 +81,7 @@
 - [ ] Environment-specific configurations
 
 ### Real-time Features
+
 - [ ] Supabase Realtime subscriptions
 - [ ] Live player join/leave notifications
 - [ ] Synchronized countdown timers
@@ -81,6 +91,7 @@
 - [ ] Offline state management
 
 ### Enhanced UI/UX
+
 - [ ] Polished component library
 - [ ] Loading states and skeletons
 - [ ] Error boundaries
@@ -91,6 +102,7 @@
 - [ ] Accessibility (ARIA labels, keyboard nav)
 
 ### Advanced Game Features
+
 - [ ] Multiple question types (true/false, image-based, multiple choice)
 - [ ] Time-based scoring
 - [ ] Power-ups and bonuses
@@ -101,6 +113,7 @@
 - [ ] Sound effects and music
 
 ### Testing & Quality
+
 - [ ] Unit tests (80%+ coverage)
 - [ ] Integration tests for all endpoints
 - [ ] E2E tests for critical flows
@@ -111,6 +124,7 @@
 - [ ] A/B testing framework
 
 ### Infrastructure & DevOps
+
 - [ ] CI/CD pipeline
 - [ ] Automated deployments
 - [ ] Database migrations strategy
@@ -121,6 +135,7 @@
 - [ ] Log aggregation
 
 ### User-Generated Content
+
 - [ ] Question pack creator
 - [ ] Pack sharing/marketplace
 - [ ] Moderation tools
@@ -130,6 +145,7 @@
 - [ ] Content reporting system
 
 ### Monetization (If Applicable)
+
 - [ ] Premium question packs
 - [ ] Custom branding for hosts
 - [ ] Advanced analytics

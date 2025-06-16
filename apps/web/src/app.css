@@ -1,1 +1,72 @@
 @import "tailwindcss";
+
+@theme {
+  /* Custom Colors */
+  --color-primary: #8b5cf6;
+  --color-primary-light: #a78bfa;
+  --color-primary-dark: #7c3aed;
+
+  --color-accent-pink: #ec4899;
+  --color-accent-blue: #3b82f6;
+  --color-accent-green: #84cc16;
+  --color-accent-orange: #f97316;
+  --color-accent-yellow: #fde047;
+  --color-accent-red: #ef4444;
+
+  /* Player Colors */
+  --color-player-1: #3b82f6;
+  --color-player-2: #f97316;
+  --color-player-3: #10b981;
+  --color-player-4: #ec4899;
+
+  /* Animation durations and timing functions */
+  --animate-bounce-slow: 3s;
+  --animate-pulse-slow: 3s;
+  --animate-pop-in: 0.4s;
+  --animate-slide-up: 0.6s;
+}
+
+/* Custom animation utilities */
+@layer utilities {
+  .animate-bounce-slow {
+    animation: bounce var(--animate-bounce-slow) infinite;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse var(--animate-pulse-slow) infinite;
+  }
+  
+  .animate-pop-in {
+    animation: popIn var(--animate-pop-in) ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp var(--animate-slide-up) ease-out;
+  }
+}
+
+/* Custom Keyframes */
+@keyframes popIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  90% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

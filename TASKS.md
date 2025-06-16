@@ -1,139 +1,138 @@
 # Development Tasks - Trivia Game
 
-## Current Sprint - Next Steps
+## POC Tasks (Current Priority)
 
-### Immediate Tasks (Priority: High)
+### ✅ Completed
+- [x] Initialize Turbo monorepo structure
+- [x] Create project documentation (PRD.md, TASKS.md, CLAUDE.md)
+- [x] Set up Git repository
+- [x] Configure TypeScript, ESLint, Prettier
+- [x] Set up shared packages (@trivia/types, @trivia/utils, @trivia/db)
+- [x] Database schema with Drizzle ORM
+- [x] PGlite for local development
+- [x] Seed data (5 question packs, 25 questions)
+- [x] Core session endpoints (create, get, update status)
+- [x] Question packs endpoint
+- [x] Player management endpoints (join, update, leave)
+- [x] Basic routing structure with React Router
 
-1. **Frontend Setup (apps/web)** ✅
+### 🚧 In Progress - Frontend Foundation
+- [ ] Create shared UI components (Button, Input, Card)
+- [ ] API client utilities with error handling
+- [ ] Device ID generation and storage
 
-   - [x] Initialize Vite + React + TypeScript ✅
-   - [x] Install and configure Tailwind CSS v4 ✅
-   - [x] Create base routing structure (React Router) ✅
-   - [ ] Set up basic layout components
+### 📋 Next Up - Core Game Flow
 
-2. **Backend Setup (apps/api)** ✅
+#### 1. Homepage & Game Creation
+- [ ] Homepage with Create/Join buttons
+- [ ] Host game creation flow
+  - [ ] Fetch and display question packs
+  - [ ] Create session via API
+  - [ ] Navigate to host lobby
+- [ ] Join game flow
+  - [ ] Session code input
+  - [ ] Player name entry
+  - [ ] Join via API
 
-   - [x] Initialize Hono server ✅
-   - [x] Set up TypeScript configuration ✅
-   - [x] Create basic health check endpoint ✅
-   - [x] Configure CORS for local development ✅
+#### 2. Basic Game Views
+- [ ] Host lobby (show code, players, start button)
+- [ ] Player waiting room
+- [ ] Simple question display (no timer yet)
+- [ ] Answer selection for players
+- [ ] Basic score display
 
-3. **Shared Packages** ✅
-   - [x] Create @trivia/types package for shared TypeScript types ✅
-   - [x] Create @trivia/utils package for common utilities ✅
-   - [x] Set up @trivia/db package with Drizzle ORM ✅
+#### 3. Game State Management
+- [ ] Question/Answer flow endpoints
+  - [ ] GET /sessions/:code/current-question
+  - [ ] POST /players/:id/answer
+  - [ ] GET /sessions/:code/scores
+- [ ] Move to next question (host control)
+- [ ] End game and show final scores
 
-### Next Priority Tasks
+### 🎯 POC Success Criteria
+- Host can create a game with a question pack
+- Players can join with a code
+- Host can start game and advance through questions
+- Players can submit answers
+- Scores are tracked and displayed
+- Game can complete showing final rankings
 
-1. **Supabase Integration** ✅
+---
 
-   - [x] Create Supabase project ✅
-   - [x] Add credentials to .env file ✅
-   - [x] Test database connection ✅
+## Production Ready Tasks (Future)
 
-2. **Core API Development** (In Progress)
-   - [x] Implement session creation endpoint ✅
-   - [x] Fix API dependencies and module configuration ✅
-   - [x] Verify all endpoints work correctly ✅
-   - [ ] Add player join functionality
-   - [ ] Create question retrieval logic
+### Security & Performance
+- [ ] Device ID verification for player updates/deletes
+- [ ] Rate limiting on API endpoints
+- [ ] Session player limits
+- [ ] Input sanitization and validation
+- [ ] SQL injection protection
+- [ ] CORS configuration for production
+- [ ] API authentication (host verification)
+- [ ] Environment-specific configurations
 
-## Phase 1: MVP Setup & Core Features
-
-### 1. Project Setup
-
-- [x] Initialize Turbo monorepo structure ✅
-- [x] Create project documentation (PRD.md, TASKS.md, CLAUDE.md) ✅
-- [x] Set up Git repository ✅
-- [x] Create styling guide with Tailwind v4 ✅
-- [x] Configure TypeScript, ESLint, Prettier ✅
-- [x] Set up shared packages (types, utils) ✅
-- [x] Configure environment variables ✅
-
-### 2. Database Setup ✅
-
-- [x] Set up Supabase project ✅
-- [x] Create Drizzle schema for all tables ✅
-- [x] Push schema to database ✅
-- [x] Seed database with 5 question packs and 25 questions ✅
-- [x] Set up Drizzle ORM configuration with relations ✅
-
-### 3. Backend API (Hono) (In Progress)
-
-- [x] Session management endpoints
-  - [x] POST /sessions - Create new session ✅
-  - [x] GET /sessions/:code - Get session details ✅
-  - [x] PATCH /sessions/:code/status - Update session state ✅
-- [x] GET /question-packs - List available packs ✅
-- [ ] Player management
-  - [ ] POST /api/sessions/:code/players - Join session
-  - [ ] PATCH /api/players/:id - Update player details
-- [ ] Question/Answer flow
-  - [ ] GET /api/sessions/:code/current-question
-  - [ ] POST /api/players/:id/answer
-  - [ ] GET /api/sessions/:code/scores
-- [ ] Real-time WebSocket setup with Supabase
-
-### 4. Frontend Foundation
-
-- [x] Set up Vite + React + Tailwind ✅
-- [x] Create routing structure ✅
-- [ ] Design component library (Button, Card, Modal, etc.)
-- [ ] Implement responsive layout system
-
-### 5. Core Game Flow
-
-- [ ] Homepage with Create/Join options
-- [ ] Host view
-  - [ ] Session creation with pack selection
-  - [ ] Player list with join notifications
-  - [ ] Question display with timer
-  - [ ] Score leaderboard
-  - [ ] Game controls (next, pause, end)
-- [ ] Player view
-  - [ ] Join screen with code input
-  - [ ] Name entry and customization
-  - [ ] Answer selection interface
-  - [ ] Personal score display
-  - [ ] Waiting screens between questions
-
-### 6. Real-time Features
-
-- [ ] Implement Supabase Realtime subscriptions
-- [ ] Player join/leave notifications
-- [ ] Synchronized timers
-- [ ] Live score updates
+### Real-time Features
+- [ ] Supabase Realtime subscriptions
+- [ ] Live player join/leave notifications
+- [ ] Synchronized countdown timers
+- [ ] Real-time score updates
 - [ ] Connection status indicators
+- [ ] Automatic reconnection handling
+- [ ] Offline state management
 
-### 7. Testing & Polish
+### Enhanced UI/UX
+- [ ] Polished component library
+- [ ] Loading states and skeletons
+- [ ] Error boundaries
+- [ ] Toast notifications
+- [ ] Animations and transitions
+- [ ] Progressive Web App features
+- [ ] Dark mode support
+- [ ] Accessibility (ARIA labels, keyboard nav)
 
-- [ ] Unit tests for critical functions
-- [ ] Integration tests for API endpoints
-- [ ] Load testing with 50+ concurrent players
-- [ ] Mobile device testing
-- [ ] Error handling and reconnection logic
-
-## Phase 2: Enhanced Question Types
-
-- [ ] True/False questions
-- [ ] Image-based questions
-- [ ] Multiple correct answers
-- [ ] Fill-in-the-blank
-- [ ] Question difficulty levels
-- [ ] Bonus/penalty scoring system
-
-## Phase 3: User-Generated Content
-
-- [ ] Question pack creator interface
-- [ ] Pack sharing system
-- [ ] Moderation tools
-- [ ] Import/export functionality
-- [ ] Public pack marketplace
-
-## Phase 4: Advanced Features
-
+### Advanced Game Features
+- [ ] Multiple question types (true/false, image-based, multiple choice)
+- [ ] Time-based scoring
+- [ ] Power-ups and bonuses
 - [ ] Team mode
 - [ ] Tournament brackets
-- [ ] Achievements/badges
-- [ ] Historical statistics
-- [ ] Voice/video integration for remote play
+- [ ] Question difficulty levels
+- [ ] Custom avatars/themes
+- [ ] Sound effects and music
+
+### Testing & Quality
+- [ ] Unit tests (80%+ coverage)
+- [ ] Integration tests for all endpoints
+- [ ] E2E tests for critical flows
+- [ ] Load testing (100+ concurrent players)
+- [ ] Performance monitoring
+- [ ] Error tracking (Sentry)
+- [ ] Analytics integration
+- [ ] A/B testing framework
+
+### Infrastructure & DevOps
+- [ ] CI/CD pipeline
+- [ ] Automated deployments
+- [ ] Database migrations strategy
+- [ ] Backup and recovery
+- [ ] CDN for static assets
+- [ ] Image optimization pipeline
+- [ ] Monitoring and alerting
+- [ ] Log aggregation
+
+### User-Generated Content
+- [ ] Question pack creator
+- [ ] Pack sharing/marketplace
+- [ ] Moderation tools
+- [ ] User accounts and profiles
+- [ ] Pack ratings and reviews
+- [ ] Import/export functionality
+- [ ] Content reporting system
+
+### Monetization (If Applicable)
+- [ ] Premium question packs
+- [ ] Custom branding for hosts
+- [ ] Advanced analytics
+- [ ] Team/organization accounts
+- [ ] API access for integrations
+- [ ] White-label options

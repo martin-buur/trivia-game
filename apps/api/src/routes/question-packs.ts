@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { db } from '../db';
-import { questionPacks } from '@trivia/db/schema';
+import { questionPacks } from '@trivia/db';
 
 const questionPacksRoute = new Hono();
 

@@ -28,6 +28,8 @@
 
 2. **Core API Development** (In Progress)
    - [x] Implement session creation endpoint ✅
+   - [x] Fix API dependencies and module configuration ✅
+   - [x] Verify all endpoints work correctly ✅
    - [ ] Add player join functionality
    - [ ] Create question retrieval logic
 
@@ -40,7 +42,7 @@
 - [x] Create styling guide with Tailwind v4 ✅
 - [x] Configure TypeScript, ESLint, Prettier ✅
 - [x] Set up shared packages (types, utils) ✅
-- [ ] Configure environment variables
+- [x] Configure environment variables ✅
 
 ### 2. Database Setup ✅
 - [x] Set up Supabase project ✅

@@ -25,6 +25,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - PATCH /sessions/:code/status - Update session status (host only)
   - GET /question-packs - List available question packs
 - Drizzle relations configured for all tables
+- Fixed API module dependencies and ESM configuration
+- API server running successfully on port 3001
 
 ### 🚀 Next Steps
 1. **Player Management API**: Implement player join/leave endpoints
@@ -76,6 +78,13 @@ pnpm lint:fix
 # Testing
 pnpm test
 pnpm test:watch
+
+# API Testing (with dev server running)
+curl http://localhost:3001/                    # Health check
+curl http://localhost:3001/question-packs       # List question packs
+curl -X POST http://localhost:3001/sessions \  # Create session
+  -H "Content-Type: application/json" \
+  -d '{"hostDeviceId": "test-123", "questionPackId": "<pack-id>"}'
 
 # Git workflow
 git status          # Check changes

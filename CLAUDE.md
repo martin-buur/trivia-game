@@ -9,12 +9,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Project documentation created (PRD.md, TASKS.md, STYLING.md)
 - Git repository set up with proper .gitignore
 - Tailwind v4 styling guide configured
+- Frontend (apps/web) initialized with Vite + React 19 + TypeScript + Tailwind CSS v4
+- Backend (apps/api) initialized with Hono + TypeScript
+- Shared packages created (@trivia/types, @trivia/utils, @trivia/db)
+- All dependencies updated to latest exact versions
+- ESLint configuration for entire project
+- Basic routing structure with React Router v7
+- Database schema defined with Drizzle ORM
 
 ### 🚀 Next Steps
-1. **Set up Frontend (apps/web)**: Initialize Vite + React + TypeScript with Tailwind v4
-2. **Set up Backend (apps/api)**: Initialize Hono server with TypeScript
-3. **Create Shared Packages**: Set up @trivia/types, @trivia/utils, and @trivia/db
-4. **Database Setup**: Configure Supabase project and Drizzle ORM schemas
+1. **Supabase Setup**: Create Supabase project and add credentials to `.env`
+2. **API Development**: Implement core API endpoints (sessions, players, questions)
+3. **Frontend Components**: Build UI components for host and player views
+4. **Real-time Integration**: Set up Supabase Realtime subscriptions
+5. **Database Migration**: Run initial migrations and seed data
 
 ## Project Overview
 
@@ -77,7 +85,7 @@ Key tables and their relationships:
 - `sessions` → `question_packs` (many-to-one)
 - `players` → `answers` → `questions` (tracking responses)
 
-Always use Drizzle ORM for database operations. Schema is defined in `packages/db/schema`.
+Always use Drizzle ORM for database operations. Schema is defined in `packages/db/src/schema.ts`.
 
 ## Real-time Event Patterns
 

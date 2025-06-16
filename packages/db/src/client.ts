@@ -8,20 +8,20 @@ const isProduction = process.env.NODE_ENV === "production";
 const isTest = process.env.NODE_ENV === "test";
 const connectionString = process.env.DATABASE_URL!;
 
-let db: ReturnType<typeof drizzle> | ReturnType<typeof drizzlePglite>;
-
-if (isProduction) {
-  // Use Supabase PostgreSQL for production
-  const sql = postgres(connectionString);
-  db = drizzle(sql, { schema });
-} else if (isTest) {
-  // Use in-memory PGlite for testing (isolated, fast)
-  const pglite = new PGlite("memory://");
-  db = drizzlePglite(pglite, { schema });
-} else {
-  console.log("Using PGlite with filesystem persistence for local development");
-  const pglite = new PGlite("../../.pglite/data");
-  db = drizzlePglite(pglite, { schema });
+function createDb() {
+  if (isProduction) {
+    // Use Supabase PostgreSQL for production
+    const sql = postgres(connectionString);
+    return drizzle(sql, { schema });
+  } else if (isTest) {
+    // Use in-memory PGlite for testing (isolated, fast)
+    const pglite = new PGlite("memory://");
+    return drizzlePglite(pglite, { schema });
+  } else {
+    console.log("Using PGlite with filesystem persistence for local development");
+    const pglite = new PGlite("../../.pglite/data");
+    return drizzlePglite(pglite, { schema });
+  }
 }
 
-export { db };
+export const db = createDb();

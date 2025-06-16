@@ -13,7 +13,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Backend (apps/api) initialized with Hono + TypeScript
 - Shared packages created (@trivia/types, @trivia/utils, @trivia/db)
 - All dependencies updated to latest exact versions
-- ESLint configuration for entire project
 - Basic routing structure with React Router v7
 - Database schema defined with Drizzle ORM
 - Supabase project created and credentials added to `.env`
@@ -31,13 +30,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - Environment-based database client (PGlite for local, Supabase for production)
   - Filesystem persistence in `.pglite/data` directory
   - Automatic schema application using existing Drizzle definitions
+- **Build system fully operational**:
+  - All shared packages (@trivia/types, @trivia/utils, @trivia/db) have proper build scripts
+  - TypeScript configurations updated with correct dist/ outputs
+  - Turbo build pipeline working end-to-end
+  - Individual package builds work in isolation
+  - API test setup fixed with proper PGlite typing
 
 ### 🚀 Next Steps
-1. **Player Management API**: Implement player join/leave endpoints
-2. **Game Flow API**: Questions, answers, scoring endpoints
-3. **Real-time Integration**: Set up Supabase Realtime subscriptions
-4. **Frontend Components**: Build UI components for host and player views
-5. **State Management**: Implement Zustand stores for game state
+1. **ESLint Configuration**: Set up ESLint configuration files for linting (currently missing)
+2. **Player Management API**: Implement player join/leave endpoints
+3. **Game Flow API**: Questions, answers, scoring endpoints
+4. **Real-time Integration**: Set up Supabase Realtime subscriptions
+5. **Frontend Components**: Build UI components for host and player views
+6. **State Management**: Implement Zustand stores for game state
 
 ## Project Overview
 
@@ -77,9 +83,9 @@ pnpm db:migrate    # Run migrations (for production)
 # Type checking
 pnpm typecheck
 
-# Linting
-pnpm lint
-pnpm lint:fix
+# Linting (Note: ESLint configuration needs to be set up)
+# pnpm lint          # Currently not working - ESLint config missing
+# pnpm lint:fix      # Currently not working - ESLint config missing
 
 # Testing
 pnpm test

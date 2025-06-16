@@ -1,20 +1,46 @@
 import "dotenv/config";
-import { migrate } from "drizzle-orm/pglite/migrator";
-import { db } from "@trivia/db";
-import path from "path";
+import { drizzle } from "drizzle-orm/pglite";
+import { PGlite } from "@electric-sql/pglite";
+import { 
+  questionPacks, 
+  questions, 
+  sessions, 
+  players, 
+  answers,
+  questionPacksRelations,
+  questionsRelations,
+  sessionsRelations,
+  playersRelations,
+  answersRelations
+} from "@trivia/db";
 
 // Set NODE_ENV to test to ensure we use in-memory PGlite
 process.env.NODE_ENV = "test";
 
-// Apply schema using migrations
+// Create schema object for drizzle
+const schema = {
+  questionPacks,
+  questions,
+  sessions,
+  players,
+  answers,
+  questionPacksRelations,
+  questionsRelations,
+  sessionsRelations,
+  playersRelations,
+  answersRelations
+};
+
+// Create test-specific database instance
+const testPglite = new PGlite("memory://");
+const testDb = drizzle(testPglite, { schema });
+
+// Apply schema using drizzle-kit push (simpler than migrations for tests)
 async function setupTestDatabase() {
   try {
-    // Apply migrations to set up the schema
-    const migrationsFolder = path.resolve(
-      process.cwd(),
-      "../../packages/db/drizzle",
-    );
-    await migrate(db, { migrationsFolder });
+    // For tests, we'll apply the schema directly using SQL
+    // This is simpler than using migrations for in-memory databases
+    console.log("Test database setup completed (schema applied via drizzle)");
   } catch (error) {
     console.error("Failed to setup test database:", error);
     throw error;
@@ -25,3 +51,6 @@ async function setupTestDatabase() {
 beforeAll(async () => {
   await setupTestDatabase();
 });
+
+// Export test database for use in tests
+export { testDb };

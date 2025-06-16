@@ -1,4 +1,4 @@
-# Styling Guide - Trivia Game
+# Styling Guide - Trivia Game (Tailwind v4)
 
 ## Design Philosophy
 - **Bright & Playful**: Bold colors that create excitement
@@ -6,197 +6,226 @@
 - **Art-Ready**: Placeholder system that can easily swap in real assets
 - **Motion & Energy**: Smooth animations to enhance the fun factor
 
-## Color Palette
+## Tailwind v4 Configuration
 
-### Primary Colors
+### CSS-based Configuration (app.css)
 ```css
---purple-primary: #8B5CF6;    /* Main brand color */
---pink-accent: #EC4899;       /* Exciting moments */
---blue-electric: #3B82F6;     /* Player 1 */
---green-lime: #84CC16;        /* Correct answers */
---orange-vibrant: #F97316;    /* Player 2 */
---yellow-bright: #FDE047;     /* Stars, achievements */
---red-alert: #EF4444;         /* Wrong answers, urgency */
+@import "tailwindcss";
+
+@theme {
+  /* Custom Colors */
+  --color-primary: #8B5CF6;
+  --color-primary-light: #A78BFA;
+  --color-primary-dark: #7C3AED;
+  
+  --color-accent-pink: #EC4899;
+  --color-accent-blue: #3B82F6;
+  --color-accent-green: #84CC16;
+  --color-accent-orange: #F97316;
+  --color-accent-yellow: #FDE047;
+  --color-accent-red: #EF4444;
+  
+  /* Player Colors */
+  --color-player-1: #3B82F6;
+  --color-player-2: #F97316;
+  --color-player-3: #10B981;
+  --color-player-4: #EC4899;
+  
+  /* Animations */
+  --animate-bounce-slow: bounce 3s infinite;
+  --animate-pulse-slow: pulse 3s infinite;
+  --animate-pop-in: popIn 0.4s ease-out;
+  --animate-slide-up: slideUp 0.6s ease-out;
+}
+
+/* Custom Keyframes */
+@keyframes popIn {
+  0% { 
+    transform: scale(0.8); 
+    opacity: 0;
+  }
+  90% { 
+    transform: scale(1.05);
+  }
+  100% { 
+    transform: scale(1); 
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  0% { 
+    transform: translateY(30px); 
+    opacity: 0;
+  }
+  100% { 
+    transform: translateY(0); 
+    opacity: 1;
+  }
+}
 ```
 
-### Gradient Combinations
-```css
---gradient-sunset: linear-gradient(135deg, #F97316 0%, #EC4899 100%);
---gradient-ocean: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
---gradient-success: linear-gradient(135deg, #84CC16 0%, #10B981 100%);
---gradient-energy: linear-gradient(135deg, #FDE047 0%, #F97316 100%);
+### Using Custom Properties in Components
+With Tailwind v4, you can use the custom properties directly:
+```html
+<!-- Using custom colors -->
+<div class="bg-[--color-primary] text-white">
+<div class="bg-[--color-player-1]">
+<div class="animate-[--animate-pop-in]">
 ```
 
-## Typography Scale
-
-```css
-/* Base size: 18px for mobile, 20px for desktop */
---text-xs: 0.75rem;     /* 13.5px - metadata */
---text-sm: 0.875rem;    /* 15.75px - captions */
---text-base: 1rem;      /* 18px - body text */
---text-lg: 1.25rem;     /* 22.5px - buttons */
---text-xl: 1.5rem;      /* 27px - subheadings */
---text-2xl: 2rem;       /* 36px - questions */
---text-3xl: 2.5rem;     /* 45px - scores */
---text-4xl: 3rem;       /* 54px - main headings */
---text-5xl: 4rem;       /* 72px - session codes */
---text-6xl: 5rem;       /* 90px - big numbers */
-```
-
-## Placeholder Avatar System
-
-### Geometric Avatars
-```tsx
-// Generate unique avatar from player ID
-const avatarShapes = ['circle', 'square', 'hexagon', 'star', 'diamond'];
-const avatarColors = ['blue', 'green', 'orange', 'pink', 'purple'];
-
-// CSS classes for each shape
-.avatar-circle { clip-path: circle(50%); }
-.avatar-square { border-radius: 20%; }
-.avatar-hexagon { clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
-.avatar-star { clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
-.avatar-diamond { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
-```
-
-### Emoji Fallbacks
-```tsx
-const playerEmojis = ['🦊', '🐸', '🦁', '🐙', '🦜', '🐢', '🦋', '🐝', '🦈', '🦩'];
-```
-
-## Component Styling Patterns
+## Component Classes
 
 ### Buttons
-```css
-.btn-primary {
-  @apply px-8 py-4 text-xl font-bold text-white rounded-2xl 
-         transform transition-all duration-200 active:scale-95
-         shadow-lg hover:shadow-xl;
-  background: var(--gradient-sunset);
-}
+```html
+<!-- Primary Button -->
+<button class="px-8 py-4 text-xl font-bold text-white rounded-2xl 
+               bg-gradient-to-r from-accent-orange to-accent-pink
+               transform transition-all duration-200 hover:scale-105 active:scale-95
+               shadow-lg hover:shadow-xl">
+  Create Game
+</button>
 
-.btn-secondary {
-  @apply px-8 py-4 text-xl font-bold rounded-2xl 
-         bg-white text-purple-600 border-4 border-purple-600
-         transform transition-all duration-200 active:scale-95;
-}
+<!-- Secondary Button -->
+<button class="px-8 py-4 text-xl font-bold rounded-2xl 
+               bg-white text-primary border-4 border-primary
+               transform transition-all duration-200 hover:scale-105 active:scale-95">
+  Join Game
+</button>
 ```
 
 ### Cards
-```css
-.game-card {
-  @apply rounded-3xl p-8 shadow-2xl backdrop-blur-sm;
-  background: rgba(255, 255, 255, 0.9);
-  border: 3px solid rgba(139, 92, 246, 0.2);
-}
+```html
+<!-- Game Card -->
+<div class="rounded-3xl p-8 shadow-2xl backdrop-blur-sm
+            bg-white/90 border-4 border-primary/20">
+  <!-- Content -->
+</div>
 
-.answer-option {
-  @apply rounded-2xl p-6 text-xl font-semibold cursor-pointer
-         transform transition-all duration-200 hover:scale-105;
-  background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%);
-  border: 3px solid transparent;
-}
-
-.answer-option:hover {
-  border-color: var(--purple-primary);
-}
+<!-- Answer Option -->
+<button class="w-full rounded-2xl p-6 text-xl font-semibold
+               bg-white/80 border-4 border-transparent
+               transform transition-all duration-200 hover:scale-105
+               hover:border-primary hover:bg-white
+               focus:outline-none focus:ring-4 focus:ring-primary/50">
+  Answer Text
+</button>
 ```
 
-## Animation Library
+## Placeholder Avatars
 
-```css
-/* Entrance animations */
-@keyframes slideInBounce {
-  0% { transform: translateY(30px); opacity: 0; }
-  60% { transform: translateY(-10px); opacity: 1; }
-  100% { transform: translateY(0); }
-}
+### Using Tailwind Classes
+```tsx
+// Avatar component with geometric shapes
+const avatarStyles = {
+  circle: "rounded-full",
+  square: "rounded-2xl",
+  hexagon: "mask mask-hexagon", // requires tailwind-mask plugin
+  star: "mask mask-star",
+  diamond: "rotate-45 rounded-lg"
+};
 
-@keyframes popIn {
-  0% { transform: scale(0.8); opacity: 0; }
-  90% { transform: scale(1.05); }
-  100% { transform: scale(1); opacity: 1; }
-}
+const avatarColors = [
+  "bg-player-1",
+  "bg-player-2", 
+  "bg-player-3",
+  "bg-player-4",
+  "bg-gradient-to-br from-accent-pink to-accent-orange",
+  "bg-gradient-to-br from-accent-blue to-primary",
+];
 
-/* Celebration animations */
-@keyframes confetti {
-  0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-}
+// Usage
+<div className={`w-20 h-20 ${avatarStyles.circle} ${avatarColors[0]} 
+                flex items-center justify-center text-white text-3xl font-bold
+                shadow-lg`}>
+  {playerInitial}
+</div>
+```
 
-/* Utility classes */
-.animate-slide-bounce { animation: slideInBounce 0.6s ease-out; }
-.animate-pop { animation: popIn 0.4s ease-out; }
-.animate-pulse-slow { animation: pulse 3s infinite; }
+### Emoji Avatars
+```tsx
+<div className="w-20 h-20 rounded-full bg-white shadow-lg
+                flex items-center justify-center text-5xl">
+  {playerEmoji}
+</div>
 ```
 
 ## Host Character Placeholder
-
-```tsx
-// Simple animated host using CSS
-<div className="host-placeholder">
-  <div className="host-head animate-bounce" />
-  <div className="host-speech-bubble animate-pulse-slow">
-    <p className="text-2xl">Welcome to Trivia Time!</p>
+```html
+<!-- Animated host circle -->
+<div class="relative mx-auto w-48">
+  <div class="w-32 h-32 mx-auto rounded-full 
+              bg-gradient-to-br from-accent-orange to-accent-pink
+              shadow-2xl shadow-accent-orange/50
+              animate-bounce-slow"></div>
+  
+  <!-- Speech bubble -->
+  <div class="absolute -top-16 left-1/2 -translate-x-1/2
+              bg-white rounded-3xl px-6 py-3 shadow-xl
+              animate-pulse-slow">
+    <p class="text-heading text-center">Welcome!</p>
   </div>
 </div>
-
-// CSS
-.host-placeholder {
-  @apply relative w-48 h-48 mx-auto;
-}
-
-.host-head {
-  @apply w-32 h-32 mx-auto rounded-full;
-  background: var(--gradient-sunset);
-  box-shadow: 0 0 40px rgba(249, 115, 22, 0.5);
-}
-
-.host-speech-bubble {
-  @apply absolute -top-16 left-1/2 transform -translate-x-1/2
-         bg-white rounded-3xl px-6 py-3 shadow-xl;
-}
 ```
 
-## Responsive Breakpoints
+## Responsive Text Utilities
+```html
+<!-- Session code display -->
+<h1 class="text-6xl md:text-7xl lg:text-8xl font-black text-primary">
+  ABC123
+</h1>
 
-```css
-/* Mobile first approach */
-@media (min-width: 640px) {  /* Tablet */
-  :root { font-size: 19px; }
-}
+<!-- Question text -->
+<h2 class="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800">
+  What is the capital of France?
+</h2>
 
-@media (min-width: 1024px) { /* Desktop */
-  :root { font-size: 20px; }
-}
-
-@media (min-width: 1920px) { /* Large screens */
-  :root { font-size: 22px; }
-}
+<!-- Body text -->
+<p class="text-lg md:text-xl text-gray-700">
+  Choose your answer below
+</p>
 ```
 
-## Future Art Asset Integration
+## Animation Utilities
+```html
+<!-- Entrance animations -->
+<div class="animate-slide-up">Content slides up on mount</div>
+<div class="animate-pop-in">Content pops in</div>
 
+<!-- Continuous animations -->
+<div class="animate-pulse-slow">Gentle pulsing effect</div>
+<div class="animate-bounce-slow">Slow bouncing</div>
+
+<!-- Celebration -->
+<div class="animate-spin">🎉</div>
+```
+
+## Accessibility Classes
+```html
+<!-- Focus states -->
+<button class="... focus:outline-none focus:ring-4 focus:ring-primary/50">
+
+<!-- Screen reader only -->
+<span class="sr-only">Loading...</span>
+
+<!-- Reduced motion -->
+<div class="motion-safe:animate-bounce motion-reduce:animate-none">
+```
+
+## Future Art Integration
 ```tsx
-// Component structure ready for art assets
+// Component ready for art assets
+interface AvatarProps {
+  imageUrl?: string;
+  fallback: 'geometric' | 'emoji';
+  playerColor: number;
+}
+
 <Avatar 
-  placeholder="geometric" // or "emoji"
-  shape="hexagon"
-  color="purple"
-  imageUrl={player.avatarUrl} // When available
+  imageUrl={player.avatarUrl}
+  fallback="geometric"
+  playerColor={playerIndex}
 />
 
-<GameHost
-  placeholder="animated-circle"
-  characterUrl={host.characterUrl} // When available
-  speechBubble={currentMessage}
-/>
+// When art is available, component switches from placeholder to image
 ```
-
-## Accessibility Features
-
-- All interactive elements have `:focus` states with visible outlines
-- Color combinations meet WCAG AAA standards
-- Animations respect `prefers-reduced-motion`
-- Touch targets minimum 44x44px
-- Clear visual hierarchy with size and weight differences

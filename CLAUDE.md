@@ -45,6 +45,14 @@ pnpm lint:fix
 # Testing
 pnpm test
 pnpm test:watch
+
+# Git workflow
+git status          # Check changes
+git add .           # Stage all changes
+git commit -m ""    # Commit with message
+git push            # Push to remote
+git pull            # Pull latest changes
+git checkout -b     # Create new branch
 ```
 
 ## Database Schema (Drizzle)

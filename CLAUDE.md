@@ -48,13 +48,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - API client with typed endpoints and error handling
   - Homepage with Create/Join game options
   - Fully responsive layout (mobile-first, scales to desktop)
+- **Host game flow completed**:
+  - CreateGame page with question pack selection
+  - API integration for session creation
+  - HostLobby view showing game code, players, and game info
+  - Real-time player list updates (polling every 2 seconds)
+  - Proper error handling and loading states
 
 ### 🚀 Next Steps
 
-1. **Player Management API**: Implement player join/leave endpoints
-2. **Game Flow API**: Questions, answers, scoring endpoints
-3. **Real-time Integration**: Set up Supabase Realtime subscriptions
-4. **Frontend Components**: Build UI components for host and player views
+1. **Join Game Flow**: Implement player join flow with session code validation and name entry
+2. **Player Waiting Room**: Build the player view while waiting for game to start
+3. **Game Flow API**: Questions, answers, scoring endpoints
+4. **Real-time Integration**: Set up Supabase Realtime subscriptions to replace polling
 5. **State Management**: Implement Zustand stores for game state
 
 ## Project Overview

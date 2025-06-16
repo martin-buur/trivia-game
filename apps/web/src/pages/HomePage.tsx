@@ -11,13 +11,7 @@ export function HomePage() {
   const { execute: checkSession, loading: checking } = useApi();
 
   const handleCreateGame = async () => {
-    try {
-      // For now, we'll navigate to question pack selection
-      // In a real implementation, this would be part of the host flow
-      navigate(`/host/create`);
-    } catch (error) {
-      console.error('Failed to start game creation:', error);
-    }
+    navigate('/create');
   };
 
   const handleJoinGame = async () => {
@@ -47,12 +41,18 @@ export function HomePage() {
         </div>
 
         {/* Main Card */}
-        <Card variant="floating" animate className="text-center p-6 sm:p-8 lg:p-10">
+        <Card
+          variant="floating"
+          animate
+          className="text-center p-6 sm:p-8 lg:p-10"
+        >
           {/* Host Character Placeholder */}
           <div className="relative mx-auto w-32 sm:w-40 lg:w-48 mb-6 sm:mb-8">
             <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 mx-auto rounded-full bg-gradient-to-br from-accent-orange to-accent-pink shadow-2xl shadow-accent-orange/50 animate-bounce-slow"></div>
             <div className="absolute -top-12 sm:-top-14 lg:-top-16 left-1/2 -translate-x-1/2 bg-white rounded-2xl sm:rounded-3xl px-4 py-2 sm:px-6 sm:py-3 shadow-xl animate-pulse-slow whitespace-nowrap">
-              <p className="text-sm sm:text-base lg:text-lg font-bold text-gray-800">Ready to play?</p>
+              <p className="text-sm sm:text-base lg:text-lg font-bold text-gray-800">
+                Ready to play?
+              </p>
             </div>
           </div>
 

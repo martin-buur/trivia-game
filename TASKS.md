@@ -30,10 +30,10 @@
 #### 1. Homepage & Game Creation
 
 - [x] Homepage with Create/Join buttons
-- [ ] Host game creation flow
-  - [ ] Fetch and display question packs
-  - [ ] Create session via API
-  - [ ] Navigate to host lobby
+- [x] Host game creation flow
+  - [x] Fetch and display question packs
+  - [x] Create session via API
+  - [x] Navigate to host lobby
 - [ ] Join game flow
   - [ ] Session code input
   - [ ] Player name entry
@@ -41,7 +41,7 @@
 
 #### 2. Basic Game Views
 
-- [ ] Host lobby (show code, players, start button)
+- [x] Host lobby (show code, players, start button)
 - [ ] Player waiting room
 - [ ] Simple question display (no timer yet)
 - [ ] Answer selection for players

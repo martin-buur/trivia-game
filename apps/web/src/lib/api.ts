@@ -29,21 +29,25 @@ async function handleResponse<T>(response: Response): Promise<T> {
 export const api = {
   // Session endpoints
   sessions: {
-    create: async (
-      hostDeviceId: string,
-      questionPackId: string
-    ): Promise<Session> => {
+    create: async (data: {
+      hostDeviceId: string;
+      questionPackId: string;
+    }): Promise<Session> => {
       const response = await fetch(`${API_BASE_URL}/sessions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hostDeviceId, questionPackId }),
+        body: JSON.stringify(data),
       });
-      return handleResponse<Session>(response);
+      const result = await handleResponse<{ session: Session }>(response);
+      return result.session;
     },
 
     get: async (code: string): Promise<Session & { players: Player[] }> => {
       const response = await fetch(`${API_BASE_URL}/sessions/${code}`);
-      return handleResponse<Session & { players: Player[] }>(response);
+      const result = await handleResponse<{
+        session: Session & { players: Player[] };
+      }>(response);
+      return result.session;
     },
 
     updateStatus: async (
@@ -95,7 +99,10 @@ export const api = {
   questionPacks: {
     list: async (): Promise<QuestionPack[]> => {
       const response = await fetch(`${API_BASE_URL}/question-packs`);
-      return handleResponse<QuestionPack[]>(response);
+      const data = await handleResponse<{ questionPacks: QuestionPack[] }>(
+        response
+      );
+      return data.questionPacks;
     },
 
     get: async (

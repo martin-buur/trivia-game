@@ -21,13 +21,13 @@
    - [x] Set up @trivia/db package with Drizzle ORM ✅
 
 ### Next Priority Tasks
-1. **Supabase Integration**
-   - [ ] Create Supabase project
-   - [ ] Add credentials to .env file
-   - [ ] Test database connection
+1. **Supabase Integration** ✅
+   - [x] Create Supabase project ✅
+   - [x] Add credentials to .env file ✅
+   - [x] Test database connection ✅
 
-2. **Core API Development**
-   - [ ] Implement session creation endpoint
+2. **Core API Development** (In Progress)
+   - [x] Implement session creation endpoint ✅
    - [ ] Add player join functionality
    - [ ] Create question retrieval logic
 
@@ -42,18 +42,19 @@
 - [x] Set up shared packages (types, utils) ✅
 - [ ] Configure environment variables
 
-### 2. Database Setup
-- [ ] Set up Supabase project
+### 2. Database Setup ✅
+- [x] Set up Supabase project ✅
 - [x] Create Drizzle schema for all tables ✅
-- [ ] Write migration scripts
-- [ ] Seed database with default question packs
-- [x] Set up Drizzle ORM configuration ✅
+- [x] Push schema to database ✅
+- [x] Seed database with 5 question packs and 25 questions ✅
+- [x] Set up Drizzle ORM configuration with relations ✅
 
-### 3. Backend API (Hono)
-- [ ] Session management endpoints
-  - [ ] POST /api/sessions - Create new session
-  - [ ] GET /api/sessions/:code - Get session details
-  - [ ] PATCH /api/sessions/:code - Update session state
+### 3. Backend API (Hono) (In Progress)
+- [x] Session management endpoints
+  - [x] POST /sessions - Create new session ✅
+  - [x] GET /sessions/:code - Get session details ✅
+  - [x] PATCH /sessions/:code/status - Update session state ✅
+- [x] GET /question-packs - List available packs ✅
 - [ ] Player management
   - [ ] POST /api/sessions/:code/players - Join session
   - [ ] PATCH /api/players/:id - Update player details

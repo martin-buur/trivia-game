@@ -16,13 +16,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ESLint configuration for entire project
 - Basic routing structure with React Router v7
 - Database schema defined with Drizzle ORM
+- Supabase project created and credentials added to `.env`
+- Database schema pushed to Supabase
+- Seed data created (5 question packs, 25 questions)
+- Core session API endpoints implemented:
+  - POST /sessions - Create new game session
+  - GET /sessions/:code - Get session details with players
+  - PATCH /sessions/:code/status - Update session status (host only)
+  - GET /question-packs - List available question packs
+- Drizzle relations configured for all tables
 
 ### 🚀 Next Steps
-1. **Supabase Setup**: Create Supabase project and add credentials to `.env`
-2. **API Development**: Implement core API endpoints (sessions, players, questions)
-3. **Frontend Components**: Build UI components for host and player views
-4. **Real-time Integration**: Set up Supabase Realtime subscriptions
-5. **Database Migration**: Run initial migrations and seed data
+1. **Player Management API**: Implement player join/leave endpoints
+2. **Game Flow API**: Questions, answers, scoring endpoints
+3. **Real-time Integration**: Set up Supabase Realtime subscriptions
+4. **Frontend Components**: Build UI components for host and player views
+5. **State Management**: Implement Zustand stores for game state
 
 ## Project Overview
 

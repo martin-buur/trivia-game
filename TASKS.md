@@ -1,9 +1,32 @@
 # Development Tasks - Trivia Game
 
+## Current Sprint - Next Steps
+
+### Immediate Tasks (Priority: High)
+1. **Frontend Setup (apps/web)**
+   - [ ] Initialize Vite + React + TypeScript
+   - [ ] Install and configure Tailwind CSS v4
+   - [ ] Create base routing structure (React Router)
+   - [ ] Set up basic layout components
+
+2. **Backend Setup (apps/api)**
+   - [ ] Initialize Hono server
+   - [ ] Set up TypeScript configuration
+   - [ ] Create basic health check endpoint
+   - [ ] Configure CORS for local development
+
+3. **Shared Packages**
+   - [ ] Create @trivia/types package for shared TypeScript types
+   - [ ] Create @trivia/utils package for common utilities
+   - [ ] Set up @trivia/db package with Drizzle ORM
+
 ## Phase 1: MVP Setup & Core Features
 
 ### 1. Project Setup
-- [ ] Initialize Turbo monorepo structure
+- [x] Initialize Turbo monorepo structure ✅
+- [x] Create project documentation (PRD.md, TASKS.md, CLAUDE.md) ✅
+- [x] Set up Git repository ✅
+- [x] Create styling guide with Tailwind v4 ✅
 - [ ] Configure TypeScript, ESLint, Prettier
 - [ ] Set up shared packages (types, utils)
 - [ ] Configure environment variables

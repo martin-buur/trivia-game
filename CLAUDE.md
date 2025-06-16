@@ -2,6 +2,20 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Current Status
+
+### ✅ Completed
+- Turbo monorepo structure initialized
+- Project documentation created (PRD.md, TASKS.md, STYLING.md)
+- Git repository set up with proper .gitignore
+- Tailwind v4 styling guide configured
+
+### 🚀 Next Steps
+1. **Set up Frontend (apps/web)**: Initialize Vite + React + TypeScript with Tailwind v4
+2. **Set up Backend (apps/api)**: Initialize Hono server with TypeScript
+3. **Create Shared Packages**: Set up @trivia/types, @trivia/utils, and @trivia/db
+4. **Database Setup**: Configure Supabase project and Drizzle ORM schemas
+
 ## Project Overview
 
 This is a real-time multiplayer trivia game built with:
@@ -85,3 +99,23 @@ Subscribe to Supabase channels using consistent naming:
 - Integration tests for API endpoints
 - E2E tests for critical user flows (create game, join game, answer question)
 - Load tests to ensure 100+ concurrent players work smoothly
+
+## Context7 MCP Usage
+
+Context7 MCP is available for looking up documentation for libraries and frameworks used in this project. Use it to:
+- Find up-to-date API documentation for Hono, Drizzle ORM, Supabase, React Router, Zustand, etc.
+- Get implementation examples and best practices
+- Resolve library-specific issues
+
+To use Context7:
+1. First call `mcp__context7__resolve-library-id` with the library name to get the Context7-compatible ID
+2. Then call `mcp__context7__get-library-docs` with that ID to retrieve documentation
+
+Example libraries to reference:
+- Hono (backend framework)
+- Drizzle ORM (database)
+- Supabase (auth, database, realtime)
+- React Router (routing)
+- Zustand (state management)
+- Vite (build tool)
+- Tailwind CSS v4 (styling)

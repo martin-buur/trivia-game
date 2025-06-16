@@ -27,6 +27,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Drizzle relations configured for all tables
 - Fixed API module dependencies and ESM configuration
 - API server running successfully on port 3001
+- **PGlite setup for local development**:
+  - Environment-based database client (PGlite for local, Supabase for production)
+  - Filesystem persistence in `.pglite/data` directory
+  - Automatic schema application using existing Drizzle definitions
 
 ### 🚀 Next Steps
 1. **Player Management API**: Implement player join/leave endpoints
@@ -39,9 +43,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a real-time multiplayer trivia game built with:
 - **Frontend**: Vite + React + TypeScript + Tailwind CSS (unified app for both host and player views)
-- **Backend**: Hono + Drizzle ORM + Supabase + PostgreSQL
+- **Backend**: Hono + Drizzle ORM + PGlite (local) / Supabase (production) + PostgreSQL
 - **Architecture**: Turbo monorepo with shared packages
 - **Real-time**: Supabase Realtime for WebSocket communication
+- **Local Development**: PGlite embedded PostgreSQL for offline development
 
 ## Key Architecture Decisions
 
@@ -49,6 +54,7 @@ This is a real-time multiplayer trivia game built with:
 2. **Session-Based**: No user authentication required; players identified by device ID
 3. **Real-time First**: All game state changes broadcast via Supabase Realtime subscriptions
 4. **Question Packs**: Pre-defined question sets that hosts select when creating games
+5. **Environment-Based Database**: PGlite for local development, Supabase PostgreSQL for production
 
 ## Common Development Commands
 
@@ -62,11 +68,11 @@ pnpm dev
 # Build all packages
 pnpm build
 
-# Database operations
-pnpm db:generate    # Generate Drizzle migrations
-pnpm db:push       # Push schema to database
-pnpm db:migrate    # Run migrations
+# Database operations (automatically uses PGlite locally, Supabase in production)
+pnpm db:push       # Push schema to database (recommended for dev)
 pnpm db:seed       # Seed question packs
+pnpm db:generate   # Generate migrations (for production)
+pnpm db:migrate    # Run migrations (for production)
 
 # Type checking
 pnpm typecheck
@@ -104,6 +110,43 @@ Key tables and their relationships:
 - `players` → `answers` → `questions` (tracking responses)
 
 Always use Drizzle ORM for database operations. Schema is defined in `packages/db/src/schema.ts`.
+
+## Local Development with PGlite
+
+The project uses PGlite (embedded PostgreSQL) for local development and Supabase PostgreSQL for production. This provides:
+
+- **Offline Development**: No internet connection required for database operations
+- **Fast Startup**: No external database setup needed
+- **Isolated Development**: Each developer has their own database instance
+- **Automatic Schema Sync**: Schema changes are applied using `drizzle-kit push`
+- **Filesystem Persistence**: Database persists in `.pglite/data` directory
+
+### First Time Setup
+```bash
+# Install dependencies
+pnpm install
+
+# Push schema to create local PGlite database
+pnpm db:push
+
+# Seed with test data
+pnpm db:seed
+
+# Start development servers
+pnpm dev
+```
+
+### Database Reset
+```bash
+# Delete local database and start fresh
+rm -rf .pglite
+pnpm db:push
+pnpm db:seed
+```
+
+The database client automatically detects the environment:
+- `NODE_ENV !== 'production'` → Uses PGlite (`.pglite/data`)
+- `NODE_ENV === 'production'` → Uses Supabase PostgreSQL
 
 ## Real-time Event Patterns
 

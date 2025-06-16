@@ -1,8 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
-import { db } from '../db';
-import { sessions, questionPacks } from '@trivia/db';
+import { db, sessions, questionPacks } from '@trivia/db';
 import { generateSessionCode } from '@trivia/utils';
 
 const sessionsRoute = new Hono();

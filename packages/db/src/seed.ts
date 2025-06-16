@@ -1,17 +1,5 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
+import { db } from './client';
 import { questionPacks, questions } from './schema';
-
-dotenv.config({ path: path.join(__dirname, '../../../apps/api/.env') });
-
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL is not set');
-}
-
-const sql = postgres(process.env.DATABASE_URL);
-const db = drizzle(sql);
 
 async function seed() {
   console.log('🌱 Starting seed...');
@@ -266,8 +254,6 @@ async function seed() {
   } catch (error) {
     console.error('❌ Seed failed:', error);
     throw error;
-  } finally {
-    await sql.end();
   }
 }
 

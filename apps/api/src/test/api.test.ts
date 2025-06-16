@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { db, questionPacks } from '@trivia/db';
+import { questionPacks } from '@trivia/db';
+import { testDb as db } from './setup';
 
 describe('API Database Integration', () => {
   beforeEach(async () => {

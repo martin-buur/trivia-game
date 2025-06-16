@@ -118,10 +118,16 @@ importers:
       postgres:
         specifier: 3.4.6
         version: 3.4.6
+      zod:
+        specifier: ^3.25.64
+        version: 3.25.64
     devDependencies:
       '@types/node':
         specifier: 24.0.2
         version: 24.0.2
+      dotenv:
+        specifier: 16.5.0
+        version: 16.5.0
       drizzle-kit:
         specifier: 0.30.2
         version: 0.30.2
@@ -1883,6 +1889,9 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
+  zod@3.25.64:
+    resolution: {integrity: sha512-hbP9FpSZf7pkS7hRVUrOjhwKJNyampPgtXKc3AN6DsWtoHsg2Sb4SQaS4Tcay380zSwd2VPo9G9180emBACp5g==}
+
   zustand@5.0.5:
     resolution: {integrity: sha512-mILtRfKW9xM47hqxGIxCv12gXusoY/xTSHBYApXozR0HmQv299whhBeeAcRy+KrPPybzosvJBCOmVjq6x12fCg==}
     engines: {node: '>=12.20.0'}
@@ -3319,6 +3328,8 @@ snapshots:
   yallist@3.1.1: {}
 
   yocto-queue@0.1.0: {}
+
+  zod@3.25.64: {}
 
   zustand@5.0.5(@types/react@19.1.8)(react@19.1.0):
     optionalDependencies:

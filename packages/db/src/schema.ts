@@ -1,4 +1,5 @@
 import { pgTable, text, timestamp, integer, uuid, pgEnum } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 
 export const sessionStatusEnum = pgEnum('session_status', ['waiting', 'playing', 'finished']);
 export const difficultyEnum = pgEnum('difficulty', ['easy', 'medium', 'hard']);
@@ -53,3 +54,49 @@ export const answers = pgTable('answers', {
   pointsEarned: integer('points_earned').notNull(),
   answeredAt: timestamp('answered_at').notNull().defaultNow(),
 });
+
+// Relations
+export const questionPacksRelations = relations(questionPacks, ({ many }) => ({
+  questions: many(questions),
+  sessions: many(sessions),
+}));
+
+export const questionsRelations = relations(questions, ({ one, many }) => ({
+  pack: one(questionPacks, {
+    fields: [questions.packId],
+    references: [questionPacks.id],
+  }),
+  currentSessions: many(sessions),
+  answers: many(answers),
+}));
+
+export const sessionsRelations = relations(sessions, ({ one, many }) => ({
+  questionPack: one(questionPacks, {
+    fields: [sessions.questionPackId],
+    references: [questionPacks.id],
+  }),
+  currentQuestion: one(questions, {
+    fields: [sessions.currentQuestionId],
+    references: [questions.id],
+  }),
+  players: many(players),
+}));
+
+export const playersRelations = relations(players, ({ one, many }) => ({
+  session: one(sessions, {
+    fields: [players.sessionId],
+    references: [sessions.id],
+  }),
+  answers: many(answers),
+}));
+
+export const answersRelations = relations(answers, ({ one }) => ({
+  player: one(players, {
+    fields: [answers.playerId],
+    references: [players.id],
+  }),
+  question: one(questions, {
+    fields: [answers.questionId],
+    references: [questions.id],
+  }),
+}));

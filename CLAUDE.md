@@ -52,7 +52,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - CreateGame page with question pack selection
   - API integration for session creation
   - HostLobby view showing game code, players, and game info
-  - Real-time player list updates (polling every 2 seconds)
+  - Player list updates (currently polling every 2 seconds, to be replaced with WebSocket)
   - Proper error handling and loading states
 
 ### 🚀 Next Steps
@@ -60,7 +60,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 1. **Join Game Flow**: Implement player join flow with session code validation and name entry
 2. **Player Waiting Room**: Build the player view while waiting for game to start
 3. **Game Flow API**: Questions, answers, scoring endpoints
-4. **Real-time Integration**: Set up Supabase Realtime subscriptions to replace polling
+4. **Real-time Integration**: Set up WebSocket connections with @hono/node-ws to replace polling
 5. **State Management**: Implement Zustand stores for game state
 
 ## Project Overview
@@ -70,14 +70,14 @@ This is a real-time multiplayer trivia game built with:
 - **Frontend**: Vite + React + TypeScript + Tailwind CSS (unified app for both host and player views)
 - **Backend**: Hono + Drizzle ORM + PGlite (local) / Supabase (production) + PostgreSQL
 - **Architecture**: Turbo monorepo with shared packages
-- **Real-time**: Supabase Realtime for WebSocket communication
+- **Real-time**: @hono/node-ws for WebSocket communication
 - **Local Development**: PGlite embedded PostgreSQL for offline development
 
 ## Key Architecture Decisions
 
 1. **Unified Frontend**: Single React app with routing to handle both host (`/host/:code`) and player (`/play/:code`) experiences
 2. **Session-Based**: No user authentication required; players identified by device ID
-3. **Real-time First**: All game state changes broadcast via Supabase Realtime subscriptions
+3. **Real-time First**: All game state changes broadcast via WebSocket connections
 4. **Question Packs**: Pre-defined question sets that hosts select when creating games
 5. **Environment-Based Database**: PGlite for local development, Supabase PostgreSQL for production
 
@@ -179,18 +179,20 @@ The database client automatically detects the environment:
 
 ## Real-time Event Patterns
 
-Subscribe to Supabase channels using consistent naming:
+WebSocket events for game communication:
 
-- Channel: `session:${sessionCode}`
-- Events: `player_joined`, `game_started`, `question_revealed`, `answer_submitted`, `scores_updated`
+- Connection: `ws://localhost:3001/ws` (development)
+- Events: `player_joined`, `player_left`, `game_started`, `question_revealed`, `answer_submitted`, `scores_updated`
+- Message format: `{ type: 'event_name', sessionCode: string, data: any }`
 
 ## Important Patterns
 
-1. **Error Handling**: Always wrap Supabase operations in try-catch with user-friendly error messages
+1. **Error Handling**: Always wrap API and WebSocket operations in try-catch with user-friendly error messages
 2. **Device ID**: Store in localStorage, generate UUID if not present
 3. **Session Codes**: 6-character alphanumeric, uppercase, excluding confusing characters (0, O, I, 1)
-4. **State Management**: Use Zustand for client state, Supabase for server state
+4. **State Management**: Use Zustand for client state, WebSocket + API for server state
 5. **Responsive Design**: Mobile-first for player views, desktop-optimized for host views
+6. **WebSocket Reconnection**: Implement automatic reconnection with exponential backoff
 
 ## Testing Approach
 
@@ -230,8 +232,9 @@ To use Context7:
 Example libraries to reference:
 
 - Hono (backend framework)
+- @hono/node-ws (WebSocket adapter for Hono)
 - Drizzle ORM (database)
-- Supabase (auth, database, realtime)
+- Supabase (database only, not realtime)
 - React Router (routing)
 - Zustand (state management)
 - Vite (build tool)

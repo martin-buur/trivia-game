@@ -82,13 +82,14 @@
 
 ### Real-time Features
 
-- [ ] Supabase Realtime subscriptions
+- [ ] WebSocket server with @hono/node-ws
+- [ ] WebSocket client connection management
 - [ ] Live player join/leave notifications
 - [ ] Synchronized countdown timers
 - [ ] Real-time score updates
 - [ ] Connection status indicators
 - [ ] Automatic reconnection handling
-- [ ] Offline state management
+- [ ] WebSocket event handlers for game state
 
 ### Enhanced UI/UX
 

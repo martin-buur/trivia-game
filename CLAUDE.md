@@ -74,16 +74,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - Sessions API tests covering all game flow scenarios
   - Players API tests for join/update/leave operations
   - Proper test data cleanup and foreign key handling
+- **Complete Game Flow Implementation**:
+  - Host game controls with Start Game, Reveal Answer, and Next Question functionality
+  - Player game view with question display, answer selection, and real-time feedback
+  - Game over view with podium display and full leaderboard
+  - Real-time WebSocket communication using @hono/node-ws
+  - Custom useGameSocket hook for connection management and event handling
+  - Score tracking and live updates throughout the game
+- **E2E Testing with Playwright**:
+  - Complete test setup for game flow scenarios
+  - Host and player interaction testing
+  - Game creation, joining, and basic flow verification
 
 ### 🚀 Next Steps
 
-1. **Host Game Controls**: Implement Start Game button functionality and question advancement UI
-2. **Player Game View**: Display questions, answer options, and submission UI
-3. **Real-time Updates**: Implement game state updates when host starts game or advances questions
-4. **Score Display**: Show live scores after each question and final results
-5. **WebSocket Integration**: Replace polling with @hono/node-ws for real-time updates
-6. **State Management**: Implement Zustand stores for game state
-7. **Error Recovery**: Handle disconnections and reconnections gracefully
+1. **Enhanced Game Features**: Multiple question types, time-based scoring, power-ups
+2. **Advanced UI/UX**: Polished animations, loading states, error boundaries
+3. **State Management**: Consider Zustand for complex client state if needed
+4. **Load Testing**: Ensure 100+ concurrent players work smoothly
+5. **Production Deployment**: CI/CD, monitoring, and infrastructure setup
+6. **User-Generated Content**: Question pack creator and sharing features
 
 ## Project Overview
 
@@ -203,13 +213,24 @@ The database client automatically detects the environment:
 - `NODE_ENV !== 'production'` → Uses PGlite (`.pglite/data`)
 - `NODE_ENV === 'production'` → Uses Supabase PostgreSQL
 
-## Real-time Event Patterns
+## Real-time WebSocket Communication
 
-WebSocket events for game communication:
+The game uses WebSocket connections for real-time updates:
 
-- Connection: `ws://localhost:3001/ws` (development)
-- Events: `player_joined`, `player_left`, `game_started`, `question_revealed`, `answer_submitted`, `scores_updated`
-- Message format: `{ type: 'event_name', sessionCode: string, data: any }`
+- **Connection**: `ws://localhost:3001/ws` (development)
+- **Client Management**: Automatic room joining, connection state tracking, ping/pong keepalive
+- **Events**: 
+  - `player_joined` - When a player joins the game
+  - `player_left` - When a player leaves the game  
+  - `game_started` - When host starts the game
+  - `question_revealed` - New question shown
+  - `answer_submitted` - When any player submits an answer
+  - `question_completed` - Question results with scores
+  - `scores_updated` - Live score updates
+  - `game_finished` - Game completed
+- **Message format**: `{ type: 'event_name', sessionCode: string, data: any }`
+- **Auto-reconnection**: Built-in reconnection with exponential backoff
+- **Connection states**: `connecting`, `connected`, `disconnected`, `error`
 
 ## Important Patterns
 

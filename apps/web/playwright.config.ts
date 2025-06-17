@@ -31,7 +31,13 @@ export default defineConfig({
   webServer: [
     {
       command: 'pnpm dev',
-      cwd: '../..',
+      cwd: '../../apps/api',
+      port: 3001,
+      reuseExistingServer: !process.env.CI,
+    },
+    {
+      command: 'pnpm dev',
+      cwd: '.',
       port: 3000,
       reuseExistingServer: !process.env.CI,
     },

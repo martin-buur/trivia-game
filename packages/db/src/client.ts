@@ -6,6 +6,7 @@ import * as schema from './schema';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isTest = process.env.NODE_ENV === 'test';
+const isE2E = process.env.E2E_TEST === 'true';
 const connectionString = process.env.DATABASE_URL!;
 
 function createDb() {
@@ -16,6 +17,12 @@ function createDb() {
   } else if (isTest) {
     // Use in-memory PGlite for testing (isolated, fast)
     const pglite = new PGlite('memory://');
+    return drizzlePglite(pglite, { schema });
+  } else if (isE2E) {
+    console.log(
+      'Using PGlite with filesystem persistence for E2E tests'
+    );
+    const pglite = new PGlite('../../.pglite/e2e-data');
     return drizzlePglite(pglite, { schema });
   } else {
     console.log(

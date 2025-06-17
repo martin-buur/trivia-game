@@ -15,8 +15,10 @@
     "build": "tsc",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
+    "db:push:test": "E2E_TEST=true drizzle-kit push",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx src/seed.ts",
+    "db:seed:test": "E2E_TEST=true tsx src/seed.test.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
   },

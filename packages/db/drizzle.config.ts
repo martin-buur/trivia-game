@@ -4,6 +4,7 @@ import * as dotenv from 'dotenv';
 dotenv.config({ path: '../../apps/api/.env' });
 
 const isProduction = process.env.NODE_ENV === 'production';
+const isE2E = process.env.E2E_TEST === 'true';
 
 export default {
   schema: './src/schema.ts',
@@ -18,7 +19,7 @@ export default {
     : {
         driver: 'pglite',
         dbCredentials: {
-          url: '../../.pglite/data',
+          url: isE2E ? '../../.pglite/e2e-data' : '../../.pglite/data',
         },
       }),
 } satisfies Config;

@@ -303,9 +303,9 @@ test.describe('Game Flow', () => {
       await hostPage.getByRole('button', { name: 'Create Game' }).click();
       
       await hostPage.waitForSelector('[data-testid="question-pack"]', { timeout: 10000 });
-      // Use the Quick Test Pack with 3-second timeouts
-      const quickTestPack = hostPage.locator('[data-testid="question-pack"]:has-text("Quick Test Pack")');
-      await quickTestPack.click();
+      // Use the E2E Test Pack with 3-second timeouts
+      const testPack = hostPage.locator('[data-testid="question-pack"]:has-text("E2E Test Pack")');
+      await testPack.click();
       await hostPage.getByRole('button', { name: 'Create Game' }).click();
 
       const gameCode = await hostPage.locator('.text-5xl').textContent();
@@ -353,8 +353,8 @@ test.describe('Game Flow', () => {
       expect(initialCount).toContain('1');
       
       // Wait for server-side timeout to complete and show results
-      // Quick Test Pack has 3-second timeouts
-      await expect(playerPage.getByText("Time's up!")).toBeVisible({ 
+      // E2E Test Pack has 3-second timeouts
+      await expect(playerPage.getByText("You ran out of time")).toBeVisible({ 
         timeout: 8000  // 3s timeout + 5s buffer for processing
       });
       

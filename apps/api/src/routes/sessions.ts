@@ -27,8 +27,8 @@ async function getAnsweredCount(questionId: string, db: any): Promise<number> {
 
 // Helper function to reveal answer and complete question
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function revealAndCompleteQuestion(sessionCode: string, questionId: string, db: any, ws: IWebSocketManager, isTimeout: boolean = false) {
-  console.log(`Revealing answer for question ${questionId} in session ${sessionCode} (timeout: ${isTimeout})`);
+async function revealAndCompleteQuestion(sessionCode: string, questionId: string, db: any, ws: IWebSocketManager, timeoutPlayerDeviceIds: string[] = []) {
+  console.log(`Revealing answer for question ${questionId} in session ${sessionCode} (timeout players: ${timeoutPlayerDeviceIds.length})`);
   
   try {
     // Get session with current question and players
@@ -105,10 +105,8 @@ async function revealAndCompleteQuestion(sessionCode: string, questionId: string
       isCorrect: p.isCorrect
     }));
 
-    // Get timeout players if this was a timeout
-    const timeoutPlayers = isTimeout ? 
-      playersWithAnswers.filter((p: any) => !p.hasAnswered).map((p: any) => p.deviceId) : 
-      undefined;
+    // Use provided timeout players or empty array
+    const timeoutPlayers = timeoutPlayerDeviceIds.length > 0 ? timeoutPlayerDeviceIds : undefined;
 
     // Broadcast question completion
     ws.broadcastToRoom(sessionCode, {
@@ -191,8 +189,9 @@ export async function handleQuestionTimeout(sessionCode: string, questionId: str
       }
     }
 
-    // Reveal answer and complete question
-    await revealAndCompleteQuestion(sessionCode, questionId, db, ws, true);
+    // Reveal answer and complete question with timeout players
+    const timeoutPlayerDeviceIds = unansweredPlayers.map((p: any) => p.deviceId);
+    await revealAndCompleteQuestion(sessionCode, questionId, db, ws, timeoutPlayerDeviceIds);
   } catch (error) {
     console.error('Error handling question timeout:', error);
   }
@@ -557,14 +556,14 @@ export function createSessionsRoute(db = defaultDb, ws: IWebSocketManager = wsMa
           if (elapsedTime >= minRevealTime) {
             // Auto-reveal immediately
             console.log(`Auto-revealing answer for session ${code.toUpperCase()} (${elapsedTime}ms elapsed)`);
-            await revealAndCompleteQuestion(code.toUpperCase(), session.currentQuestion!.id, db, ws, false);
+            await revealAndCompleteQuestion(code.toUpperCase(), session.currentQuestion!.id, db, ws, []);
           } else {
             // Schedule auto-reveal after remaining time
             const remainingTime = minRevealTime - elapsedTime;
             console.log(`Scheduling auto-reveal for session ${code.toUpperCase()} in ${remainingTime}ms`);
             
             const revealTimeout = setTimeout(() => {
-              revealAndCompleteQuestion(code.toUpperCase(), session.currentQuestion!.id, db, ws, false);
+              revealAndCompleteQuestion(code.toUpperCase(), session.currentQuestion!.id, db, ws, []);
               activeTimeouts.delete(code.toUpperCase());
             }, remainingTime);
             

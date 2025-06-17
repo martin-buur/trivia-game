@@ -81,6 +81,196 @@ test.describe('Game Flow', () => {
     }
   });
 
+  test('complete game flow with start game and question answering', async ({ browser }) => {
+    test.setTimeout(60000); // Longer timeout for full game flow
+    
+    const hostContext = await browser.newContext();
+    const playerContext = await browser.newContext();
+
+    const hostPage = await hostContext.newPage();
+    const playerPage = await playerContext.newPage();
+
+    try {
+      // Host creates a game and player joins (reuse setup)
+      await hostPage.goto('/');
+      await hostPage.waitForLoadState('networkidle');
+      await hostPage.getByRole('button', { name: 'Create Game' }).click();
+      
+      await hostPage.waitForSelector('[data-testid="question-pack"]', { timeout: 10000 });
+      await hostPage.locator('[data-testid="question-pack"]').first().click();
+      await hostPage.getByRole('button', { name: 'Create Game' }).click();
+      
+      const gameCode = await hostPage.locator('.text-5xl').textContent();
+      expect(gameCode).toMatch(/^[A-Z0-9]{6}$/);
+
+      // Player joins
+      await playerPage.goto('/');
+      await playerPage.getByRole('button', { name: 'Join Game' }).click();
+      await playerPage.locator('input[placeholder="ABC123"]').fill(gameCode!);
+      await playerPage.getByRole('button', { name: 'Join' }).click();
+      await playerPage.getByPlaceholder('Enter nickname').fill('TestPlayer');
+      await playerPage.getByRole('button', { name: 'Join Game' }).click();
+
+      // Wait for player to appear in host lobby
+      await hostPage.waitForSelector('text=TestPlayer', { timeout: 10000 });
+
+      // HOST: Start the game
+      const startButton = hostPage.getByRole('button', { name: 'Start Game' });
+      await expect(startButton).toBeEnabled();
+      await startButton.click();
+
+      // Host should navigate to game view
+      await expect(hostPage).toHaveURL(/\/host\/[A-Z0-9]{6}\/game$/);
+      
+      // Host should see the first question
+      await expect(hostPage.getByText('Question 1 of')).toBeVisible({ timeout: 10000 });
+      
+      // Player should automatically navigate to game view when game starts
+      await expect(playerPage).toHaveURL(/\/play\/[A-Z0-9]{6}\/game$/, { timeout: 15000 });
+      
+      // Player should see the question
+      await expect(playerPage.locator('h2').first()).toBeVisible({ timeout: 10000 });
+      
+      // Player selects an answer (first option)
+      const answerButtons = playerPage.getByRole('button').filter({ has: playerPage.locator('div:has-text("A")') });
+      const firstAnswerButton = answerButtons.first();
+      await expect(firstAnswerButton).toBeVisible({ timeout: 5000 });
+      await firstAnswerButton.click();
+
+      // Player should see answer feedback
+      await expect(playerPage.getByText(/Correct!|Incorrect/)).toBeVisible({ timeout: 5000 });
+
+      // Wait a bit for the polling to pick up the answer
+      await playerPage.waitForTimeout(3000);
+
+      // Host should see answer statistics update
+      await expect(hostPage.getByText('Players answered')).toBeVisible();
+      // Verify the answer tracking is working by checking if reveal button becomes enabled
+      await expect(hostPage.getByRole('button', { name: 'Reveal Answer' })).toBeEnabled({ timeout: 15000 });
+
+      // Host reveals answer
+      const revealButton = hostPage.getByRole('button', { name: 'Reveal Answer' });
+      await expect(revealButton).toBeEnabled();
+      await revealButton.click();
+
+      // Host should see the correct answer highlighted
+      await expect(hostPage.locator('.border-green-500')).toBeVisible();
+
+      // Host advances to next question or ends game
+      const nextButton = hostPage.getByRole('button', { name: /Next Question|End Game/ });
+      await expect(nextButton).toBeEnabled();
+      await nextButton.click();
+
+      // Should advance to next question or end game
+      if (await nextButton.textContent() === 'Next Question') {
+        // Should show Question 2 of X
+        await expect(hostPage.getByText('Question 2 of')).toBeVisible({ timeout: 10000 });
+        
+        // Player should see the new question
+        await expect(playerPage.locator('h2').first()).toBeVisible({ timeout: 10000 });
+      } else {
+        // Game ended, should navigate to results
+        await expect(hostPage).toHaveURL(/\/host\/[A-Z0-9]{6}\/results$/, { timeout: 10000 });
+        await expect(playerPage).toHaveURL(/\/play\/[A-Z0-9]{6}\/results$/, { timeout: 10000 });
+      }
+      
+    } finally {
+      await hostContext.close();
+      await playerContext.close();
+    }
+  });
+
+  test('multi-player game flow with final rankings', async ({ browser }) => {
+    test.setTimeout(90000); // Extended timeout for multi-player test
+    
+    const hostContext = await browser.newContext();
+    const player1Context = await browser.newContext();
+    const player2Context = await browser.newContext();
+
+    const hostPage = await hostContext.newPage();
+    const player1Page = await player1Context.newPage();
+    const player2Page = await player2Context.newPage();
+
+    try {
+      // Host creates game
+      await hostPage.goto('/');
+      await hostPage.getByRole('button', { name: 'Create Game' }).click();
+      await hostPage.waitForSelector('[data-testid="question-pack"]', { timeout: 10000 });
+      await hostPage.locator('[data-testid="question-pack"]').first().click();
+      await hostPage.getByRole('button', { name: 'Create Game' }).click();
+      
+      const gameCode = await hostPage.locator('.text-5xl').textContent();
+      expect(gameCode).toMatch(/^[A-Z0-9]{6}$/);
+
+      // Player 1 joins
+      await player1Page.goto('/');
+      await player1Page.getByRole('button', { name: 'Join Game' }).click();
+      await player1Page.locator('input[placeholder="ABC123"]').fill(gameCode!);
+      await player1Page.getByRole('button', { name: 'Join' }).click();
+      await player1Page.getByPlaceholder('Enter nickname').fill('Alice');
+      await player1Page.getByRole('button', { name: 'Join Game' }).click();
+
+      // Player 2 joins
+      await player2Page.goto('/');
+      await player2Page.getByRole('button', { name: 'Join Game' }).click();
+      await player2Page.locator('input[placeholder="ABC123"]').fill(gameCode!);
+      await player2Page.getByRole('button', { name: 'Join' }).click();
+      await player2Page.getByPlaceholder('Enter nickname').fill('Bob');
+      await player2Page.getByRole('button', { name: 'Join Game' }).click();
+
+      // Wait for both players to appear in host lobby
+      await hostPage.waitForSelector('text=Alice', { timeout: 10000 });
+      await hostPage.waitForSelector('text=Bob', { timeout: 10000 });
+      await expect(hostPage.getByText('Players (2)')).toBeVisible();
+
+      // Start the game
+      await hostPage.getByRole('button', { name: 'Start Game' }).click();
+      
+      // Wait for game views to load
+      await expect(hostPage).toHaveURL(/\/host\/[A-Z0-9]{6}\/game$/);
+      await expect(player1Page).toHaveURL(/\/play\/[A-Z0-9]{6}\/game$/, { timeout: 15000 });
+      await expect(player2Page).toHaveURL(/\/play\/[A-Z0-9]{6}\/game$/, { timeout: 15000 });
+
+      // Players answer the question
+      const player1Answer = player1Page.getByRole('button').filter({ has: player1Page.locator('div:has-text("A")') }).first();
+      const player2Answer = player2Page.getByRole('button').filter({ has: player2Page.locator('div:has-text("B")') }).first();
+      
+      await player1Answer.click();
+      await player2Answer.click();
+
+      // Wait for answers to be processed
+      await player1Page.waitForTimeout(3000);
+
+      // Host should see 2/2 players answered and be able to reveal answer
+      await expect(hostPage.getByRole('button', { name: 'Reveal Answer' })).toBeEnabled({ timeout: 15000 });
+      await hostPage.getByRole('button', { name: 'Reveal Answer' }).click();
+
+      // Host advances to end the game (assuming only 1 question for simplicity)
+      const nextButton = hostPage.getByRole('button', { name: /Next Question|End Game/ });
+      await nextButton.click();
+
+      // If there are more questions, just end here for test simplicity
+      // Otherwise, should navigate to results
+      if (await hostPage.url().includes('/results')) {
+        // Verify final rankings page
+        await expect(hostPage.getByText('Game Over!')).toBeVisible({ timeout: 10000 });
+        await expect(hostPage.getByText('Full Leaderboard')).toBeVisible();
+        
+        // Players should also see results
+        await expect(player1Page).toHaveURL(/\/play\/[A-Z0-9]{6}\/results$/, { timeout: 15000 });
+        await expect(player2Page).toHaveURL(/\/play\/[A-Z0-9]{6}\/results$/, { timeout: 15000 });
+        
+        await expect(player1Page.getByText('Game Over!')).toBeVisible();
+        await expect(player2Page.getByText('Game Over!')).toBeVisible();
+      }
+
+    } finally {
+      await hostContext.close();
+      await player1Context.close();
+      await player2Context.close();
+    }
+  });
+
   test('player cannot join with invalid code', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');

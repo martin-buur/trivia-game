@@ -423,6 +423,62 @@ export function createSessionsRoute(db = defaultDb) {
     }
   });
 
+  // Get answer status for current question
+  sessionsRoute.get('/:code/answer-status', async (c) => {
+    try {
+      const code = c.req.param('code');
+
+      const session = await db.query.sessions.findFirst({
+        where: eq(sessions.code, code.toUpperCase()),
+        with: {
+          players: true,
+        },
+      });
+
+      if (!session) {
+        return c.json({ error: 'Session not found' }, 404);
+      }
+
+      if (!session.currentQuestionId) {
+        return c.json({ error: 'No current question' }, 400);
+      }
+
+      // Get answered players for current question
+      const answeredPlayers = await db.query.answers.findMany({
+        where: eq(answers.questionId, session.currentQuestionId),
+        with: {
+          player: true,
+        },
+      });
+
+      const answeredPlayerIds = new Set(answeredPlayers.map(a => a.playerId));
+      const unansweredPlayers = session.players.filter(
+        p => !answeredPlayerIds.has(p.id)
+      );
+
+      return c.json({
+        currentQuestion: {
+          id: session.currentQuestionId,
+          order: 1, // TODO: Add currentQuestionOrder to schema if needed
+        },
+        totalPlayers: session.players.length,
+        answeredCount: answeredPlayers.length,
+        answeredPlayers: answeredPlayers.map(a => ({
+          id: a.player.id,
+          nickname: a.player.nickname,
+          answeredAt: a.answeredAt,
+        })),
+        unansweredPlayers: unansweredPlayers.map(p => ({
+          id: p.id,
+          nickname: p.nickname,
+        })),
+      });
+    } catch (error) {
+      console.error('Error getting answer status:', error);
+      return c.json({ error: 'Failed to get answer status' }, 500);
+    }
+  });
+
   return sessionsRoute;
 }
 

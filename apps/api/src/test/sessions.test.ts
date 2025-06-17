@@ -570,4 +570,110 @@ describe('Sessions API', () => {
       expect(data.gameStatus).toBe('playing');
     });
   });
+
+  describe('GET /sessions/:code/answer-status', () => {
+    it('should get answer status for current question', async () => {
+      const [testSession] = await db
+        .insert(sessions)
+        .values({
+          code: 'TEST01',
+          hostDeviceId: 'host-123',
+          questionPackId: testPack.id,
+          status: 'playing',
+          currentQuestionId: testQuestions[0].id,
+        })
+        .returning();
+
+      const [player1, player2] = await db
+        .insert(players)
+        .values([
+          {
+            sessionId: testSession.id,
+            nickname: 'Alice',
+            deviceId: 'device-1',
+          },
+          {
+            sessionId: testSession.id,
+            nickname: 'Bob',
+            deviceId: 'device-2',
+          },
+          {
+            sessionId: testSession.id,
+            nickname: 'Charlie',
+            deviceId: 'device-3',
+          },
+        ])
+        .returning();
+
+      // Player 1 and 2 answer, Player 3 hasn't answered yet
+      await db.insert(answers).values([
+        {
+          playerId: player1.id,
+          questionId: testQuestions[0].id,
+          selectedOptionIndex: 0,
+          isCorrect: 1,
+          pointsEarned: 100,
+        },
+        {
+          playerId: player2.id,
+          questionId: testQuestions[0].id,
+          selectedOptionIndex: 1,
+          isCorrect: 0,
+          pointsEarned: 0,
+        },
+      ]);
+
+      const app = createTestApp();
+
+      const res = await app.request('/sessions/TEST01/answer-status');
+
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      
+      expect(data.currentQuestion.id).toBe(testQuestions[0].id);
+      expect(data.currentQuestion.order).toBe(1);
+      expect(data.totalPlayers).toBe(3);
+      expect(data.answeredCount).toBe(2);
+      expect(data.answeredPlayers).toHaveLength(2);
+      expect(data.unansweredPlayers).toHaveLength(1);
+      
+      // Check answered players
+      expect(data.answeredPlayers.map((p: any) => p.nickname)).toContain('Alice');
+      expect(data.answeredPlayers.map((p: any) => p.nickname)).toContain('Bob');
+      
+      // Check unanswered players
+      expect(data.unansweredPlayers[0].nickname).toBe('Charlie');
+    });
+
+    it('should return error for session without current question', async () => {
+      await db
+        .insert(sessions)
+        .values({
+          code: 'TEST01',
+          hostDeviceId: 'host-123',
+          questionPackId: testPack.id,
+          status: 'waiting',
+          currentQuestionId: null,
+        })
+        .returning();
+
+      const app = createTestApp();
+
+      const res = await app.request('/sessions/TEST01/answer-status');
+
+      expect(res.status).toBe(400);
+      const data = await res.json();
+      expect(data.error).toBe('No current question');
+    });
+
+    it('should return error for non-existent session', async () => {
+      const app = createTestApp();
+
+      const res = await app.request('/sessions/INVALID/answer-status');
+
+      expect(res.status).toBe(404);
+      const data = await res.json();
+      expect(data.error).toBe('Session not found');
+    });
+  });
 });

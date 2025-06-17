@@ -43,6 +43,18 @@ export function HostGameView() {
         // Get current scores
         const { players } = await api.game.getScores(code);
         setPlayers(players);
+
+        // Get answer status for current question
+        try {
+          const answerStatus = await api.game.getAnswerStatus(code);
+          const answeredPlayerIds = new Set(
+            answerStatus.answeredPlayers.map(p => p.id)
+          );
+          setAnsweredPlayers(answeredPlayerIds);
+        } catch (answerError) {
+          // If no current question yet, ignore the error
+          console.debug('No answer status available yet:', answerError);
+        }
       } catch (error) {
         console.error('Error fetching game state:', error);
       }

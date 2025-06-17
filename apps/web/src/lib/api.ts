@@ -199,6 +199,27 @@ export const api = {
         response
       );
     },
+
+    getAnswerStatus: async (
+      sessionCode: string
+    ): Promise<{
+      currentQuestion: { id: string; order: number };
+      totalPlayers: number;
+      answeredCount: number;
+      answeredPlayers: { id: string; nickname: string; answeredAt: string }[];
+      unansweredPlayers: { id: string; nickname: string }[];
+    }> => {
+      const response = await fetch(
+        `${API_BASE_URL}/sessions/${sessionCode}/answer-status`
+      );
+      return handleResponse<{
+        currentQuestion: { id: string; order: number };
+        totalPlayers: number;
+        answeredCount: number;
+        answeredPlayers: { id: string; nickname: string; answeredAt: string }[];
+        unansweredPlayers: { id: string; nickname: string }[];
+      }>(response);
+    },
   },
 };
 

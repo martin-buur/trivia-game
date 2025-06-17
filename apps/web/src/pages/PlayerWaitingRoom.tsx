@@ -91,10 +91,10 @@ export function PlayerWaitingRoom() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-accent-blue/20 to-accent-pink/20 flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 border-4 border-accent-blue border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600">Loading game...</p>
+          <div className="w-16 h-16 mx-auto mb-4 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-text-secondary">Loading game...</p>
         </div>
       </div>
     );
@@ -104,24 +104,24 @@ export function PlayerWaitingRoom() {
   // const currentPlayer = session.players.find(p => p.id === playerId);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-accent-blue/20 to-accent-pink/20 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
       <div className="max-w-md sm:max-w-lg w-full">
         {/* Header */}
         <div className="text-center mb-6 animate-slide-up">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-primary mb-2">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-primary-dark mb-2">
             Waiting Room
           </h1>
           <div className="flex items-center justify-center gap-4">
-            <p className="text-lg sm:text-xl text-gray-700">
-              Game Code: <span className="font-bold">{sessionCode}</span>
+            <p className="text-lg sm:text-xl text-text-primary">
+              Game Code: <span className="font-bold text-primary">{sessionCode}</span>
             </p>
             <div className="flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${
-                connectionState === 'connected' ? 'bg-green-500' : 
-                connectionState === 'connecting' ? 'bg-yellow-500' : 
-                'bg-red-500'
+                connectionState === 'connected' ? 'bg-success' : 
+                connectionState === 'connecting' ? 'bg-warning' : 
+                'bg-error'
               }`} />
-              <p className="text-xs text-gray-500 capitalize">{connectionState}</p>
+              <p className="text-xs text-text-tertiary capitalize">{connectionState}</p>
             </div>
           </div>
         </div>
@@ -129,19 +129,19 @@ export function PlayerWaitingRoom() {
         {/* Player Card */}
         <Card variant="floating" animate className="mb-6 p-6">
           <div className="text-center">
-            <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-accent-green to-accent-blue shadow-xl mb-4 flex items-center justify-center animate-bounce-slow">
+            <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-player-3 to-player-1 shadow-xl mb-4 flex items-center justify-center animate-bounce-slow">
               <span className="text-3xl">🎮</span>
             </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-1">
+            <h2 className="text-2xl font-bold text-text-primary mb-1">
               {playerNickname || 'Player'}
             </h2>
-            <p className="text-gray-600">That&apos;s you!</p>
+            <p className="text-text-secondary">That&apos;s you!</p>
           </div>
         </Card>
 
         {/* Other Players */}
         <Card variant="default" className="p-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">
+          <h3 className="text-lg font-bold text-text-primary mb-4">
             Players in Lobby ({players.length})
           </h3>
 
@@ -151,21 +151,21 @@ export function PlayerWaitingRoom() {
                 key={player.id}
                 className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
                   player.id === playerId
-                    ? 'bg-accent-blue/20 border-2 border-accent-blue'
-                    : 'bg-gray-100'
+                    ? 'bg-primary/10 border-2 border-primary shadow-sm'
+                    : 'bg-bg-secondary border border-border-light'
                 }`}
               >
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
                     player.id === playerId
-                      ? 'bg-gradient-to-br from-accent-green to-accent-blue text-white'
-                      : 'bg-gray-300'
+                      ? 'bg-gradient-to-br from-player-3 to-player-1 text-white'
+                      : 'bg-border-medium text-text-tertiary'
                   }`}
                 >
                   {player.nickname.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-gray-800">
+                  <p className="font-semibold text-text-primary">
                     {player.nickname}
                     {player.id === playerId && ' (You)'}
                   </p>
@@ -177,7 +177,7 @@ export function PlayerWaitingRoom() {
 
         {/* Waiting Message */}
         <div className="text-center mt-6 animate-pulse-slow">
-          <p className="text-gray-600">
+          <p className="text-text-secondary font-medium">
             Waiting for the host to start the game...
           </p>
         </div>

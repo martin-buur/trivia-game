@@ -71,14 +71,14 @@ export function JoinGame() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-accent-blue/20 to-accent-pink/20 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
       <div className="max-w-md sm:max-w-lg w-full">
         {/* Logo/Title */}
         <div className="text-center mb-8 animate-slide-up">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-primary mb-2">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-primary-dark mb-2">
             Join Game
           </h1>
-          <p className="text-xl sm:text-2xl font-bold text-gray-700">
+          <p className="text-xl sm:text-2xl font-bold text-text-primary">
             Code: {sessionCode}
           </p>
         </div>
@@ -88,10 +88,10 @@ export function JoinGame() {
           {error ? (
             <div className="text-center animate-pop-in">
               <div className="mb-6">
-                <div className="w-20 h-20 mx-auto rounded-full bg-red-100 flex items-center justify-center mb-4">
+                <div className="w-20 h-20 mx-auto rounded-full bg-error/10 flex items-center justify-center mb-4">
                   <span className="text-3xl">😕</span>
                 </div>
-                <p className="text-lg font-semibold text-red-600 mb-2">
+                <p className="text-lg font-semibold text-error mb-2">
                   {error}
                 </p>
               </div>
@@ -105,19 +105,19 @@ export function JoinGame() {
             </div>
           ) : checking ? (
             <div className="text-center py-8">
-              <div className="w-16 h-16 mx-auto mb-4 border-4 border-accent-blue border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-gray-600">Checking game...</p>
+              <div className="w-16 h-16 mx-auto mb-4 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-text-secondary">Checking game...</p>
             </div>
           ) : (
             <div className="space-y-6 animate-pop-in">
               <div className="text-center">
-                <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-accent-orange to-accent-pink shadow-xl mb-4 flex items-center justify-center">
+                <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-primary to-accent-pink shadow-xl mb-4 flex items-center justify-center">
                   <span className="text-3xl">🎮</span>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                <h2 className="text-2xl font-bold text-text-primary mb-2">
                   What&apos;s your name?
                 </h2>
-                <p className="text-gray-600">Choose a nickname for this game</p>
+                <p className="text-text-secondary">Choose a nickname for this game</p>
               </div>
 
               <Input

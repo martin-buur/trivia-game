@@ -1,29 +1,101 @@
 @import "tailwindcss";
 
 @theme {
-  /* Custom Colors */
-  --color-primary: #8b5cf6;
-  --color-primary-light: #a78bfa;
-  --color-primary-dark: #7c3aed;
+  /* Custom Colors - Improved contrast */
+  --color-primary: #6d28d9;
+  --color-primary-light: #8b5cf6;
+  --color-primary-dark: #5b21b6;
 
-  --color-accent-pink: #ec4899;
-  --color-accent-blue: #3b82f6;
-  --color-accent-green: #84cc16;
-  --color-accent-orange: #f97316;
-  --color-accent-yellow: #fde047;
-  --color-accent-red: #ef4444;
+  --color-accent-pink: #db2777;
+  --color-accent-blue: #2563eb;
+  --color-accent-green: #16a34a;
+  --color-accent-orange: #ea580c;
+  --color-accent-yellow: #facc15;
+  --color-accent-red: #dc2626;
 
-  /* Player Colors */
-  --color-player-1: #3b82f6;
-  --color-player-2: #f97316;
-  --color-player-3: #10b981;
-  --color-player-4: #ec4899;
+  /* Background Colors */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f9fafb;
+  --color-bg-tertiary: #f3f4f6;
+  --color-bg-card: #ffffff;
+  --color-bg-gradient-start: #f0f4ff;
+  --color-bg-gradient-end: #f5f3ff;
+
+  /* Text Colors - Better contrast */
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-tertiary: #6b7280;
+  --color-text-inverse: #ffffff;
+
+  /* Border Colors */
+  --color-border-light: #e5e7eb;
+  --color-border-medium: #d1d5db;
+  --color-border-dark: #9ca3af;
+
+  /* Player Colors - More vibrant */
+  --color-player-1: #2563eb;
+  --color-player-2: #ea580c;
+  --color-player-3: #16a34a;
+  --color-player-4: #db2777;
+
+  /* Success/Error/Warning Colors */
+  --color-success: #16a34a;
+  --color-error: #dc2626;
+  --color-warning: #facc15;
+
+  /* Shadow Colors */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-colored: 0 10px 25px -5px rgb(99 102 241 / 0.25);
 
   /* Animation durations and timing functions */
   --animate-bounce-slow: 3s;
   --animate-pulse-slow: 3s;
   --animate-pop-in: 0.4s;
   --animate-slide-up: 0.6s;
+}
+
+/* Global Styles */
+@layer base {
+  body {
+    @apply bg-gradient-to-br from-bg-gradient-start to-bg-gradient-end min-h-screen text-text-primary;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold text-text-primary;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl;
+  }
+
+  h2 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h3 {
+    @apply text-xl md:text-2xl;
+  }
+
+  p {
+    @apply text-text-secondary;
+  }
+
+  /* Improve focus states */
+  *:focus {
+    @apply outline-none ring-2 ring-primary ring-offset-2;
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-bg-card rounded-xl shadow-md border border-border-light;
+  }
+
+  .card-hover {
+    @apply hover:shadow-lg transition-shadow duration-200;
+  }
 }
 
 /* Custom animation utilities */

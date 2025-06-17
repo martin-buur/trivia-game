@@ -92,7 +92,7 @@ export function HostLobby() {
   if (isLoading) {
     return (
       <div className="container flex items-center justify-center min-h-screen">
-        <p className="text-gray-500">Loading session...</p>
+        <p className="text-text-secondary">Loading session...</p>
       </div>
     );
   }
@@ -102,7 +102,7 @@ export function HostLobby() {
       <div className="container flex items-center justify-center min-h-screen">
         <Card>
           <div className="p-8 text-center">
-            <h2 className="text-xl font-semibold mb-4">Session Not Found</h2>
+            <h2 className="text-xl font-bold mb-4 text-text-primary">Session Not Found</h2>
             <Button onClick={() => navigate('/')}>Back to Home</Button>
           </div>
         </Card>
@@ -114,21 +114,21 @@ export function HostLobby() {
     <div className="container py-8">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="heading mb-4">Game Lobby</h1>
+          <h1 className="text-4xl font-bold mb-4 text-text-primary">Game Lobby</h1>
           <div className="inline-block">
             <Card variant="floating" className="px-8 py-6">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-gray-600">Game Code</p>
+                <p className="text-sm text-text-secondary font-medium">Game Code</p>
                 <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full ${
-                    connectionState === 'connected' ? 'bg-green-500' : 
-                    connectionState === 'connecting' ? 'bg-yellow-500' : 
-                    'bg-red-500'
+                    connectionState === 'connected' ? 'bg-success' : 
+                    connectionState === 'connecting' ? 'bg-warning' : 
+                    'bg-error'
                   }`} />
-                  <p className="text-xs text-gray-500 capitalize">{connectionState}</p>
+                  <p className="text-xs text-text-tertiary capitalize">{connectionState}</p>
                 </div>
               </div>
-              <p className="text-5xl font-bold tracking-wider text-blue-600">
+              <p className="text-5xl font-black tracking-wider text-primary">
                 {session.code}
               </p>
             </Card>
@@ -136,7 +136,7 @@ export function HostLobby() {
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <div className="mb-6 p-4 bg-error/10 border border-error/20 rounded-lg text-error font-medium">
             {error}
           </div>
         )}
@@ -144,20 +144,20 @@ export function HostLobby() {
         <div className="grid md:grid-cols-2 gap-6">
           <Card>
             <div className="p-6">
-              <h2 className="text-xl font-semibold mb-4">
+              <h2 className="text-xl font-bold mb-4 text-text-primary">
                 Players ({players.length})
               </h2>
               {players.length === 0 ? (
-                <p className="text-gray-500">Waiting for players to join...</p>
+                <p className="text-text-secondary">Waiting for players to join...</p>
               ) : (
                 <div className="space-y-3">
                   {players.map((player) => (
                     <div
                       key={player.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      className="flex items-center justify-between p-3 bg-bg-secondary rounded-lg border border-border-light"
                     >
-                      <span className="font-medium">{player.nickname}</span>
-                      <span className="text-sm text-gray-500">
+                      <span className="font-semibold text-text-primary">{player.nickname}</span>
+                      <span className="text-sm text-text-tertiary font-medium">
                         {player.score} points
                       </span>
                     </div>
@@ -169,23 +169,23 @@ export function HostLobby() {
 
           <Card>
             <div className="p-6">
-              <h2 className="text-xl font-semibold mb-4">Game Info</h2>
+              <h2 className="text-xl font-bold mb-4 text-text-primary">Game Info</h2>
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-gray-600">Question Pack</p>
-                  <p className="font-medium">
+                  <p className="text-sm text-text-tertiary">Question Pack</p>
+                  <p className="font-semibold text-text-primary">
                     {'questionPack' in session && session.questionPack
                       ? (session.questionPack as { name: string }).name
                       : 'Loading...'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Status</p>
-                  <p className="font-medium capitalize">{session.status}</p>
+                  <p className="text-sm text-text-tertiary">Status</p>
+                  <p className="font-semibold text-text-primary capitalize">{session.status}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Created</p>
-                  <p className="font-medium">
+                  <p className="text-sm text-text-tertiary">Created</p>
+                  <p className="font-semibold text-text-primary">
                     {new Date(session.createdAt).toLocaleTimeString()}
                   </p>
                 </div>
@@ -205,12 +205,12 @@ export function HostLobby() {
         </div>
 
         <div className="mt-8 text-center">
-          <p className="text-gray-600">
+          <p className="text-text-secondary font-medium">
             Share the game code with players so they can join!
           </p>
-          <p className="text-sm text-gray-500 mt-2">
+          <p className="text-sm text-text-tertiary mt-2">
             Players can join at{' '}
-            <span className="font-mono text-blue-600">
+            <span className="font-mono text-primary font-semibold">
               {window.location.origin}
             </span>
           </p>

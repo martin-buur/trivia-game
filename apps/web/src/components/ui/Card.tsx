@@ -20,11 +20,11 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
 
     const variantClasses = {
       default:
-        'p-6 sm:p-8 shadow-2xl backdrop-blur-sm bg-white/90 border-4 border-primary/20',
+        'p-6 sm:p-8 shadow-lg bg-white border border-border-medium',
       floating:
-        'p-6 sm:p-8 shadow-2xl backdrop-blur-sm bg-white/95 border-4 border-primary/10 hover:shadow-3xl',
+        'p-6 sm:p-8 shadow-xl bg-white border border-border-light hover:shadow-2xl',
       answer:
-        'p-4 sm:p-6 bg-white/80 border-4 border-transparent hover:border-primary hover:bg-white transform hover:scale-105 focus-within:ring-4 focus-within:ring-primary/50',
+        'p-4 sm:p-6 bg-white border-2 border-border-light hover:border-primary hover:bg-primary-light/5 transform hover:scale-105 focus-within:ring-4 focus-within:ring-primary/50 shadow-md hover:shadow-lg',
     };
 
     const animationClass = animate ? 'animate-pop-in' : '';

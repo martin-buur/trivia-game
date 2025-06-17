@@ -57,7 +57,7 @@ export function CreateGame() {
   if (isLoading) {
     return (
       <div className="container flex items-center justify-center min-h-screen">
-        <p className="text-gray-500">Loading question packs...</p>
+        <p className="text-text-secondary">Loading question packs...</p>
       </div>
     );
   }
@@ -67,50 +67,50 @@ export function CreateGame() {
       <div className="max-w-2xl mx-auto">
         <button
           onClick={() => navigate('/')}
-          className="mb-6 text-blue-600 hover:text-blue-700 flex items-center gap-2"
+          className="mb-6 text-primary hover:text-primary-dark flex items-center gap-2 font-medium transition-colors"
         >
           <span>←</span> Back
         </button>
 
-        <h1 className="heading text-center mb-8">Create New Game</h1>
+        <h1 className="text-4xl font-bold text-center mb-8 text-text-primary">Create New Game</h1>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <div className="mb-6 p-4 bg-error/10 border border-error/20 rounded-lg text-error font-medium">
             {error}
           </div>
         )}
 
         <div className="space-y-6">
           <div>
-            <h2 className="text-xl font-semibold mb-4">Select Question Pack</h2>
+            <h2 className="text-2xl font-bold mb-4 text-text-primary">Select Question Pack</h2>
             {questionPacks.length === 0 ? (
-              <p className="text-gray-500">No question packs available</p>
+              <p className="text-text-secondary">No question packs available</p>
             ) : (
               <div className="grid gap-4">
                 {questionPacks.map((pack) => (
                   <Card
                     key={pack.id}
                     data-testid="question-pack"
-                    className={`cursor-pointer transition-all ${
+                    className={`cursor-pointer transition-all card-hover ${
                       selectedPackId === pack.id
-                        ? 'ring-2 ring-blue-500 border-blue-500'
-                        : 'hover:border-gray-300'
+                        ? 'ring-2 ring-primary border-primary shadow-colored'
+                        : 'hover:border-primary/30'
                     }`}
                     onClick={() => setSelectedPackId(pack.id)}
                   >
                     <div className="p-4">
-                      <h3 className="font-semibold text-lg mb-2">
+                      <h3 className="font-bold text-lg mb-2 text-text-primary">
                         {pack.name}
                       </h3>
                       {pack.description && (
-                        <p className="text-gray-600 text-sm mb-2">
+                        <p className="text-text-secondary text-sm mb-2">
                           {pack.description}
                         </p>
                       )}
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <div className="flex items-center gap-4 text-sm text-text-tertiary">
                         <span>{pack.questionCount} questions</span>
                         {pack.difficulty && (
-                          <span className="capitalize">{pack.difficulty}</span>
+                          <span className="capitalize px-2 py-1 bg-primary/10 text-primary rounded-full font-medium">{pack.difficulty}</span>
                         )}
                       </div>
                     </div>

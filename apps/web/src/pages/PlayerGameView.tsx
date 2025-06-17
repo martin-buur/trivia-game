@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { api, ApiError } from '@/lib/api';
 import { getDeviceId } from '@trivia/utils';
 import { useGameSocket } from '@/hooks/useGameSocket';
-import type { Question, QuestionRevealedEvent, GameFinishedEvent, QuestionCompletedEvent } from '@trivia/types';
+import type { Question, QuestionRevealedEvent, GameFinishedEvent, QuestionCompletedEvent, AnswerRevealedEvent } from '@trivia/types';
 
 export function PlayerGameView() {
   const { code } = useParams<{ code: string }>();
@@ -19,6 +19,7 @@ export function PlayerGameView() {
   const [totalScore, setTotalScore] = useState(0);
   const [, setGameStatus] = useState<string>('playing');
   const [timeLeft, setTimeLeft] = useState(0);
+  const [correctAnswerIndex, setCorrectAnswerIndex] = useState<number | null>(null);
 
   const deviceId = getDeviceId();
 
@@ -50,9 +51,34 @@ export function PlayerGameView() {
       setHasAnswered(false);
       setShowResult(false);
       setTimeLeft(questionEvent.data.question.timeLimit);
+      setCorrectAnswerIndex(null);
     });
     return unsubscribe;
   }, [subscribe]);
+
+  // Handle answer revealed
+  useEffect(() => {
+    const unsubscribe = subscribe('answer_revealed', (event) => {
+      const revealedEvent = event as AnswerRevealedEvent;
+      setCorrectAnswerIndex(revealedEvent.data.correctAnswerIndex);
+      setShowResult(true);
+      
+      // Find this player's result
+      const playerResult = revealedEvent.data.playerResults.find(
+        p => p.playerId === deviceId
+      );
+      
+      if (playerResult) {
+        setIsCorrect(playerResult.isCorrect);
+        setTotalScore(playerResult.totalScore);
+        if (!hasAnswered && playerResult.hasAnswered) {
+          // Server-side timeout occurred
+          setHasAnswered(true);
+        }
+      }
+    });
+    return unsubscribe;
+  }, [subscribe, deviceId, hasAnswered]);
 
   // Handle question completed (show results)
   useEffect(() => {
@@ -195,31 +221,59 @@ export function PlayerGameView() {
           </h2>
 
           <div className="space-y-3">
-            {currentQuestion.options.map((option, index) => (
-              <Button
-                key={index}
-                variant={selectedAnswer === index ? 'primary' : 'secondary'}
-                className="w-full justify-start text-left p-6"
-                onClick={() => handleAnswerSelect(index)}
-                disabled={hasAnswered}
-              >
-                <div className="flex items-center gap-4 w-full">
-                  <div
-                    className={`
-                      w-10 h-10 rounded-full flex items-center justify-center font-bold
-                      ${
-                        selectedAnswer === index
-                          ? 'bg-white text-primary'
-                          : 'bg-muted'
-                      }
-                    `}
-                  >
-                    {String.fromCharCode(65 + index)}
+            {currentQuestion.options.map((option, index) => {
+              const isSelectedAnswer = selectedAnswer === index;
+              const isCorrectAnswer = correctAnswerIndex === index;
+              
+              // Determine button styling based on state
+              let buttonClassName = "w-full justify-start text-left p-6";
+              let variant: 'primary' | 'secondary' | 'outline' = 'secondary';
+              
+              if (correctAnswerIndex !== null) {
+                // Answer has been revealed
+                if (isCorrectAnswer) {
+                  buttonClassName += " border-green-500 bg-green-50 dark:bg-green-950";
+                } else if (isSelectedAnswer && !isCorrectAnswer) {
+                  buttonClassName += " border-red-500 bg-red-50 dark:bg-red-950";
+                }
+              } else if (isSelectedAnswer) {
+                // Answer not revealed yet, but this is selected
+                variant = 'primary';
+              }
+              
+              return (
+                <Button
+                  key={index}
+                  variant={variant}
+                  className={buttonClassName}
+                  onClick={() => handleAnswerSelect(index)}
+                  disabled={hasAnswered}
+                >
+                  <div className="flex items-center gap-4 w-full">
+                    <div
+                      className={`
+                        w-10 h-10 rounded-full flex items-center justify-center font-bold
+                        ${
+                          correctAnswerIndex !== null && isCorrectAnswer
+                            ? 'bg-green-500 text-white'
+                            : correctAnswerIndex !== null && isSelectedAnswer && !isCorrectAnswer
+                            ? 'bg-red-500 text-white'
+                            : isSelectedAnswer
+                            ? 'bg-white text-primary'
+                            : 'bg-muted'
+                        }
+                      `}
+                    >
+                      {String.fromCharCode(65 + index)}
+                    </div>
+                    <span className="flex-1">{option}</span>
+                    {correctAnswerIndex !== null && isCorrectAnswer && (
+                      <span className="text-green-600 font-semibold">✓ Correct</span>
+                    )}
                   </div>
-                  <span className="flex-1">{option}</span>
-                </div>
-              </Button>
-            ))}
+                </Button>
+              );
+            })}
           </div>
 
           {/* Result Message */}

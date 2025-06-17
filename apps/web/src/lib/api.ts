@@ -166,6 +166,27 @@ export const api = {
       }>(response);
     },
 
+    revealAnswer: async (
+      sessionCode: string,
+      hostDeviceId: string
+    ): Promise<{
+      success: boolean;
+      correctAnswerIndex: number;
+    }> => {
+      const response = await fetch(
+        `${API_BASE_URL}/sessions/${sessionCode}/reveal-answer`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hostDeviceId }),
+        }
+      );
+      return handleResponse<{
+        success: boolean;
+        correctAnswerIndex: number;
+      }>(response);
+    },
+
     nextQuestion: async (
       sessionCode: string,
       hostDeviceId: string

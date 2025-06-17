@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { api, useApi } from '@/lib/api';
 import { getDeviceId } from '@trivia/utils';
 import { useGameSocket } from '@/hooks/useGameSocket';
-import type { Question, Player, AnswerSubmittedEvent, ScoresUpdatedEvent } from '@trivia/types';
+import type { Question, Player, AnswerSubmittedEvent, ScoresUpdatedEvent, AnswerRevealedEvent } from '@trivia/types';
 
 export function HostGameView() {
   const { code } = useParams<{ code: string }>();
@@ -63,6 +63,22 @@ export function HostGameView() {
     return unsubscribe;
   }, [subscribe]);
 
+  // Handle answer revealed events
+  useEffect(() => {
+    const unsubscribe = subscribe('answer_revealed', (event) => {
+      const revealedEvent = event as AnswerRevealedEvent;
+      // Update the current question with the correct answer index
+      if (currentQuestion && revealedEvent.data.correctAnswerIndex !== undefined) {
+        setCurrentQuestion({
+          ...currentQuestion,
+          correctAnswerIndex: revealedEvent.data.correctAnswerIndex
+        });
+        setShowingAnswer(true);
+      }
+    });
+    return unsubscribe;
+  }, [subscribe, currentQuestion]);
+
   // Load initial game state
   useEffect(() => {
     if (!code) return;
@@ -107,8 +123,15 @@ export function HostGameView() {
     setShowingAnswer(false);
   }, [currentQuestion?.id]);
 
-  const handleRevealAnswer = () => {
-    setShowingAnswer(true);
+  const handleRevealAnswer = async () => {
+    if (!code) return;
+
+    try {
+      await api.game.revealAnswer(code, hostDeviceId);
+      // The answer_revealed WebSocket event will update the UI
+    } catch (error) {
+      console.error('Error revealing answer:', error);
+    }
   };
 
   const handleNextQuestion = async () => {
@@ -181,37 +204,51 @@ export function HostGameView() {
           </h2>
 
           <div className="grid gap-4 md:grid-cols-2">
-            {currentQuestion.options.map((option, index) => (
-              <div
-                key={index}
-                className={`
-                  p-6 rounded-lg border-2 transition-all
-                  ${
-                    showingAnswer &&
-                    index === currentQuestion.correctAnswerIndex
-                      ? 'border-green-500 bg-green-50 dark:bg-green-950'
-                      : 'border-border'
-                  }
-                `}
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`
-                      w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold
-                      ${
-                        showingAnswer &&
-                        index === currentQuestion.correctAnswerIndex
-                          ? 'bg-green-500 text-white'
-                          : 'bg-muted'
-                      }
-                    `}
-                  >
-                    {String.fromCharCode(65 + index)}
+            {currentQuestion.options.map((option, index) => {
+              const isCorrectAnswer = index === currentQuestion.correctAnswerIndex;
+              
+              return (
+                <div
+                  key={index}
+                  className={`
+                    p-6 rounded-lg border-2 transition-all duration-300
+                    ${
+                      showingAnswer && isCorrectAnswer
+                        ? 'border-green-500 bg-green-50 dark:bg-green-950 scale-105 shadow-lg'
+                        : showingAnswer && !isCorrectAnswer
+                        ? 'border-border opacity-50'
+                        : 'border-border'
+                    }
+                  `}
+                >
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`
+                        w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold transition-all
+                        ${
+                          showingAnswer && isCorrectAnswer
+                            ? 'bg-green-500 text-white animate-pulse'
+                            : 'bg-muted'
+                        }
+                      `}
+                    >
+                      {String.fromCharCode(65 + index)}
+                    </div>
+                    <p className={`text-lg flex-1 ${showingAnswer && !isCorrectAnswer ? 'text-muted-foreground' : ''}`}>
+                      {option}
+                    </p>
+                    {showingAnswer && isCorrectAnswer && (
+                      <div className="flex items-center gap-2">
+                        <svg className="w-6 h-6 text-green-600 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="text-green-600 font-bold">CORRECT!</span>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-lg flex-1">{option}</p>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mt-8 flex justify-center gap-4">

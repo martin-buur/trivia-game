@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import {
   db as defaultDb,
   sessions,
@@ -471,6 +471,90 @@ export function createSessionsRoute(db = defaultDb, ws: IWebSocketManager = wsMa
     } catch (error) {
       console.error('Error submitting answer:', error);
       return c.json({ error: 'Failed to submit answer' }, 500);
+    }
+  });
+
+  // Reveal answer (host only)
+  sessionsRoute.post('/:code/reveal-answer', async (c) => {
+    try {
+      const code = c.req.param('code');
+      const { hostDeviceId } = await c.req.json();
+
+      // Verify host and get session with current question
+      const session = await db.query.sessions.findFirst({
+        where: eq(sessions.code, code.toUpperCase()),
+        with: {
+          currentQuestion: true,
+          players: true
+        },
+      });
+
+      if (!session) {
+        return c.json({ error: 'Session not found' }, 404);
+      }
+
+      if (session.hostDeviceId !== hostDeviceId) {
+        return c.json({ error: 'Unauthorized' }, 401);
+      }
+
+      if (session.status !== 'playing' || !session.currentQuestion) {
+        return c.json({ error: 'No active question' }, 400);
+      }
+
+      // Get current scores and answer status
+      const playersWithAnswers = await db
+        .select({
+          playerId: players.id,
+          nickname: players.nickname,
+          totalScore: players.score,
+          hasAnswered: sql<boolean>`EXISTS (
+            SELECT 1 FROM ${answers} 
+            WHERE ${answers.playerId} = ${players.id} 
+            AND ${answers.questionId} = ${session.currentQuestionId}
+          )`,
+          isCorrect: sql<boolean>`EXISTS (
+            SELECT 1 FROM ${answers} 
+            WHERE ${answers.playerId} = ${players.id} 
+            AND ${answers.questionId} = ${session.currentQuestionId}
+            AND ${answers.isCorrect} = 1
+          )`,
+          selectedOption: sql<number>`(
+            SELECT ${answers.selectedOptionIndex} 
+            FROM ${answers} 
+            WHERE ${answers.playerId} = ${players.id} 
+            AND ${answers.questionId} = ${session.currentQuestionId}
+          )`
+        })
+        .from(players)
+        .where(eq(players.sessionId, session.id))
+        .orderBy(desc(players.score));
+
+      // Broadcast answer revealed event
+      ws.broadcastToRoom(code.toUpperCase(), {
+        type: 'answer_revealed',
+        sessionCode: code.toUpperCase(),
+        timestamp: new Date().toISOString(),
+        data: {
+          questionId: session.currentQuestion.id,
+          correctAnswerIndex: session.currentQuestion.correctAnswerIndex,
+          playerResults: playersWithAnswers.map(p => ({
+            playerId: p.playerId,
+            nickname: p.nickname,
+            hasAnswered: p.hasAnswered,
+            isCorrect: p.isCorrect,
+            selectedOption: p.selectedOption,
+            totalScore: p.totalScore
+          }))
+        }
+      });
+
+      return c.json({ 
+        success: true,
+        correctAnswerIndex: session.currentQuestion.correctAnswerIndex
+      });
+    } catch (error) {
+      console.error('Error revealing answer:', error);
+      return c.json({ error: 'Failed to reveal answer' }, 500);
     }
   });
 

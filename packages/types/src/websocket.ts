@@ -6,6 +6,7 @@ export type WebSocketEventType =
   | 'game_started'
   | 'question_revealed'
   | 'answer_submitted'
+  | 'answer_revealed'
   | 'question_completed'
   | 'scores_updated'
   | 'game_finished'
@@ -72,6 +73,22 @@ export interface AnswerSubmittedEvent extends BaseWebSocketEvent {
     answeredCount: number;
     totalPlayers: number;
     allAnswered: boolean;
+  };
+}
+
+export interface AnswerRevealedEvent extends BaseWebSocketEvent {
+  type: 'answer_revealed';
+  data: {
+    questionId: string;
+    correctAnswerIndex: number;
+    playerResults: Array<{
+      playerId: string;
+      nickname: string;
+      hasAnswered: boolean;
+      isCorrect: boolean;
+      selectedOption: number | null;
+      totalScore: number;
+    }>;
   };
 }
 
@@ -143,6 +160,7 @@ export type WebSocketEvent =
   | GameStartedEvent
   | QuestionRevealedEvent
   | AnswerSubmittedEvent
+  | AnswerRevealedEvent
   | QuestionCompletedEvent
   | ScoresUpdatedEvent
   | GameFinishedEvent

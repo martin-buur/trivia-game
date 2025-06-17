@@ -4,7 +4,8 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { api, useApi } from '@/lib/api';
 import { getDeviceId } from '@trivia/utils';
-import type { Question, Player } from '@trivia/types';
+import { useGameSocket } from '@/hooks/useGameSocket';
+import type { Question, Player, AnswerSubmittedEvent, ScoresUpdatedEvent } from '@trivia/types';
 
 export function HostGameView() {
   const { code } = useParams<{ code: string }>();
@@ -25,7 +26,44 @@ export function HostGameView() {
 
   const hostDeviceId = getDeviceId();
 
-  // Fetch current question and session details
+  // WebSocket connection for real-time updates
+  const { connectionState, subscribe } = useGameSocket({
+    sessionCode: code || '',
+    deviceId: hostDeviceId,
+    isHost: true,
+    autoReconnect: true
+  });
+
+  // Handle answer submitted events
+  useEffect(() => {
+    const unsubscribe = subscribe('answer_submitted', (event) => {
+      const answerEvent = event as AnswerSubmittedEvent;
+      setAnsweredPlayers(prev => {
+        const newSet = new Set(prev);
+        newSet.add(answerEvent.data.playerId);
+        return newSet;
+      });
+    });
+    return unsubscribe;
+  }, [subscribe]);
+
+  // Handle scores updated events
+  useEffect(() => {
+    const unsubscribe = subscribe('scores_updated', (event) => {
+      const scoresEvent = event as ScoresUpdatedEvent;
+      setPlayers(scoresEvent.data.scores.map(score => ({
+        id: score.playerId,
+        nickname: score.nickname,
+        score: score.totalScore,
+        deviceId: '', // Not needed for display
+        sessionId: '', // Not needed for display
+        joinedAt: new Date() // Not accurate but required for type
+      })));
+    });
+    return unsubscribe;
+  }, [subscribe]);
+
+  // Load initial game state
   useEffect(() => {
     if (!code) return;
 
@@ -61,9 +99,6 @@ export function HostGameView() {
     };
 
     fetchGameState();
-    // Poll for updates
-    const interval = window.setInterval(fetchGameState, 2000);
-    return () => window.clearInterval(interval);
   }, [code]);
 
   // Reset answered players when question changes
@@ -116,7 +151,17 @@ export function HostGameView() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold">Game Code: {code}</h1>
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-bold">Game Code: {code}</h1>
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${
+                  connectionState === 'connected' ? 'bg-green-500' : 
+                  connectionState === 'connecting' ? 'bg-yellow-500' : 
+                  'bg-red-500'
+                }`} />
+                <p className="text-xs text-muted-foreground capitalize">{connectionState}</p>
+              </div>
+            </div>
             <p className="text-muted-foreground">
               Question {questionNumber} of {totalQuestions}
             </p>

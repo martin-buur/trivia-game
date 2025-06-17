@@ -4,7 +4,8 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { api, ApiError } from '@/lib/api';
 import { getDeviceId } from '@trivia/utils';
-import type { Question } from '@trivia/types';
+import { useGameSocket } from '@/hooks/useGameSocket';
+import type { Question, QuestionRevealedEvent, GameFinishedEvent, QuestionCompletedEvent } from '@trivia/types';
 
 export function PlayerGameView() {
   const { code } = useParams<{ code: string }>();
@@ -21,22 +22,73 @@ export function PlayerGameView() {
 
   const deviceId = getDeviceId();
 
-  // Fetch current question
+  // WebSocket connection for real-time updates
+  const { connectionState, subscribe } = useGameSocket({
+    sessionCode: code || '',
+    deviceId,
+    isHost: false,
+    autoReconnect: true
+  });
+
+  // Handle new question revealed
+  useEffect(() => {
+    const unsubscribe = subscribe('question_revealed', (event) => {
+      const questionEvent = event as QuestionRevealedEvent;
+      const newQuestion: Question = {
+        id: questionEvent.data.question.id,
+        question: questionEvent.data.question.text,
+        options: questionEvent.data.question.options,
+        timeLimit: questionEvent.data.question.timeLimit,
+        correctAnswerIndex: -1, // Players don't see correct answer
+        packId: '', // Not needed for display
+        points: 100, // Default points
+        order: 1 // Not needed for display
+      };
+      
+      setCurrentQuestion(newQuestion);
+      setSelectedAnswer(null);
+      setHasAnswered(false);
+      setShowResult(false);
+      setTimeLeft(questionEvent.data.question.timeLimit);
+    });
+    return unsubscribe;
+  }, [subscribe]);
+
+  // Handle question completed (show results)
+  useEffect(() => {
+    const unsubscribe = subscribe('question_completed', (event) => {
+      const completedEvent = event as QuestionCompletedEvent;
+      const playerScore = completedEvent.data.scores.find(s => s.playerId === deviceId);
+      
+      if (playerScore) {
+        setIsCorrect(playerScore.isCorrect);
+        setPointsEarned(playerScore.score - totalScore);
+        setTotalScore(playerScore.score);
+        setShowResult(true);
+      }
+    });
+    return unsubscribe;
+  }, [subscribe, deviceId, totalScore]);
+
+  // Handle game finished
+  useEffect(() => {
+    const unsubscribe = subscribe('game_finished', (event) => {
+      const gameFinishedEvent = event as GameFinishedEvent;
+      console.log('Game finished, navigating to results...', gameFinishedEvent);
+      navigate(`/play/${code}/results`);
+    });
+    return unsubscribe;
+  }, [subscribe, navigate, code]);
+
+  // Load initial question state
   useEffect(() => {
     if (!code) return;
 
     const fetchQuestion = async () => {
       try {
         const question = await api.game.getCurrentQuestion(code);
-
-        // Check if question changed
-        if (question.id !== currentQuestion?.id) {
-          setCurrentQuestion(question);
-          setSelectedAnswer(null);
-          setHasAnswered(false);
-          setShowResult(false);
-          setTimeLeft(question.timeLimit || 30);
-        }
+        setCurrentQuestion(question);
+        setTimeLeft(question.timeLimit || 30);
 
         // Check game status
         const { gameStatus: status } = await api.game.getScores(code);
@@ -51,9 +103,7 @@ export function PlayerGameView() {
     };
 
     fetchQuestion();
-    const interval = window.setInterval(fetchQuestion, 2000);
-    return () => window.clearInterval(interval);
-  }, [code, currentQuestion?.id, navigate]);
+  }, [code, navigate]);
 
   // Timer countdown
   useEffect(() => {
@@ -113,6 +163,17 @@ export function PlayerGameView() {
             >
               {timeLeft}s
             </p>
+          </div>
+          <div className="text-center">
+            <div className="flex items-center gap-2 justify-center mb-1">
+              <div className={`w-2 h-2 rounded-full ${
+                connectionState === 'connected' ? 'bg-green-500' : 
+                connectionState === 'connecting' ? 'bg-yellow-500' : 
+                'bg-red-500'
+              }`} />
+              <p className="text-xs text-muted-foreground capitalize">{connectionState}</p>
+            </div>
+            <p className="text-sm text-muted-foreground">Game Code: {code}</p>
           </div>
           <div className="text-right">
             <p className="text-sm text-muted-foreground">Your score</p>

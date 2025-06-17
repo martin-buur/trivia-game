@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { api } from '@/lib/api';
 import { getDeviceId } from '@trivia/utils';
-import type { Session, Player } from '@trivia/types';
+import { useGameSocket } from '@/hooks/useGameSocket';
+import type { Session, Player, PlayerJoinedEvent, PlayerLeftEvent } from '@trivia/types';
 
 export function HostLobby() {
   const { code } = useParams<{ code: string }>();
@@ -14,6 +15,14 @@ export function HostLobby() {
   const [isLoading, setIsLoading] = useState(true);
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string>('');
+
+  // WebSocket connection for real-time updates
+  const { connectionState, subscribe } = useGameSocket({
+    sessionCode: code || '',
+    deviceId: getDeviceId(),
+    isHost: true,
+    autoReconnect: true
+  });
 
   const loadSession = useCallback(async () => {
     if (!code) return;
@@ -30,16 +39,36 @@ export function HostLobby() {
     }
   }, [code]);
 
+  // Handle player joined event
+  useEffect(() => {
+    const unsubscribe = subscribe('player_joined', (event) => {
+      const playerJoinedEvent = event as PlayerJoinedEvent;
+      setPlayers(prev => {
+        const existingPlayer = prev.find(p => p.id === playerJoinedEvent.data.player.id);
+        if (existingPlayer) return prev;
+        return [...prev, playerJoinedEvent.data.player];
+      });
+    });
+    return unsubscribe;
+  }, [subscribe]);
+
+  // Handle player left event
+  useEffect(() => {
+    const unsubscribe = subscribe('player_left', (event) => {
+      const playerLeftEvent = event as PlayerLeftEvent;
+      setPlayers(prev => prev.filter(p => p.id !== playerLeftEvent.data.playerId));
+    });
+    return unsubscribe;
+  }, [subscribe]);
+
   useEffect(() => {
     if (!code) {
       navigate('/');
       return;
     }
 
+    // Load initial session data
     loadSession();
-    // Poll for player updates
-    const interval = window.setInterval(loadSession, 2000);
-    return () => window.clearInterval(interval);
   }, [code, navigate, loadSession]);
 
   const handleStartGame = async () => {
@@ -88,7 +117,17 @@ export function HostLobby() {
           <h1 className="heading mb-4">Game Lobby</h1>
           <div className="inline-block">
             <Card variant="floating" className="px-8 py-6">
-              <p className="text-sm text-gray-600 mb-2">Game Code</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-gray-600">Game Code</p>
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    connectionState === 'connected' ? 'bg-green-500' : 
+                    connectionState === 'connecting' ? 'bg-yellow-500' : 
+                    'bg-red-500'
+                  }`} />
+                  <p className="text-xs text-gray-500 capitalize">{connectionState}</p>
+                </div>
+              </div>
               <p className="text-5xl font-bold tracking-wider text-blue-600">
                 {session.code}
               </p>

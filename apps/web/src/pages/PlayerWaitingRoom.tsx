@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui';
 import { api, useApi } from '@/lib/api';
-import type { Session, Player } from '@trivia/types';
+import { useGameSocket } from '@/hooks/useGameSocket';
+import { getDeviceId } from '@trivia/utils';
+import type { Session, Player, PlayerJoinedEvent, PlayerLeftEvent, GameStartedEvent } from '@trivia/types';
 
 export function PlayerWaitingRoom() {
   const { code } = useParams<{ code: string }>();
@@ -10,6 +12,7 @@ export function PlayerWaitingRoom() {
   const [session, setSession] = useState<
     (Session & { players: Player[] }) | null
   >(null);
+  const [players, setPlayers] = useState<Player[]>([]);
   const [playerId] = useState(() => localStorage.getItem('playerId'));
   const [playerNickname] = useState(() =>
     localStorage.getItem('playerNickname')
@@ -18,19 +21,60 @@ export function PlayerWaitingRoom() {
   const { execute: fetchSession } = useApi<Session & { players: Player[] }>();
   const sessionCode = code?.toUpperCase() || '';
 
+  // WebSocket connection for real-time updates
+  const { connectionState, subscribe } = useGameSocket({
+    sessionCode,
+    deviceId: getDeviceId(),
+    isHost: false,
+    autoReconnect: true
+  });
+
+  // Handle player joined event
+  useEffect(() => {
+    const unsubscribe = subscribe('player_joined', (event) => {
+      const playerJoinedEvent = event as PlayerJoinedEvent;
+      setPlayers(prev => {
+        const existingPlayer = prev.find(p => p.id === playerJoinedEvent.data.player.id);
+        if (existingPlayer) return prev;
+        return [...prev, playerJoinedEvent.data.player];
+      });
+    });
+    return unsubscribe;
+  }, [subscribe]);
+
+  // Handle player left event
+  useEffect(() => {
+    const unsubscribe = subscribe('player_left', (event) => {
+      const playerLeftEvent = event as PlayerLeftEvent;
+      setPlayers(prev => prev.filter(p => p.id !== playerLeftEvent.data.playerId));
+    });
+    return unsubscribe;
+  }, [subscribe]);
+
+  // Handle game started event
+  useEffect(() => {
+    const unsubscribe = subscribe('game_started', (event) => {
+      const gameStartedEvent = event as GameStartedEvent;
+      console.log('Game started, navigating to game view...', gameStartedEvent);
+      navigate(`/play/${sessionCode}/game`);
+    });
+    return unsubscribe;
+  }, [subscribe, navigate, sessionCode]);
+
   useEffect(() => {
     if (!sessionCode || !playerId) {
       navigate('/');
       return;
     }
 
-    // Fetch session initially and poll for updates
+    // Load initial session data
     const loadSession = async () => {
       try {
         const sessionData = await fetchSession(api.sessions.get(sessionCode));
         setSession(sessionData);
+        setPlayers(sessionData.players || []);
 
-        // If game has started, redirect to game view
+        // If game has already started when we load, redirect immediately
         if (sessionData.status === 'playing') {
           navigate(`/play/${sessionCode}/game`);
         } else if (sessionData.status === 'finished') {
@@ -43,9 +87,6 @@ export function PlayerWaitingRoom() {
     };
 
     loadSession();
-    const interval = window.setInterval(loadSession, 2000); // Poll every 2 seconds
-
-    return () => window.clearInterval(interval);
   }, [sessionCode, playerId, fetchSession, navigate]);
 
   if (!session) {
@@ -70,9 +111,19 @@ export function PlayerWaitingRoom() {
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-primary mb-2">
             Waiting Room
           </h1>
-          <p className="text-lg sm:text-xl text-gray-700">
-            Game Code: <span className="font-bold">{sessionCode}</span>
-          </p>
+          <div className="flex items-center justify-center gap-4">
+            <p className="text-lg sm:text-xl text-gray-700">
+              Game Code: <span className="font-bold">{sessionCode}</span>
+            </p>
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${
+                connectionState === 'connected' ? 'bg-green-500' : 
+                connectionState === 'connecting' ? 'bg-yellow-500' : 
+                'bg-red-500'
+              }`} />
+              <p className="text-xs text-gray-500 capitalize">{connectionState}</p>
+            </div>
+          </div>
         </div>
 
         {/* Player Card */}
@@ -91,11 +142,11 @@ export function PlayerWaitingRoom() {
         {/* Other Players */}
         <Card variant="default" className="p-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">
-            Players in Lobby ({session.players.length})
+            Players in Lobby ({players.length})
           </h3>
 
           <div className="space-y-3">
-            {session.players.map((player) => (
+            {players.map((player) => (
               <div
                 key={player.id}
                 className={`flex items-center gap-3 p-3 rounded-lg transition-all ${

@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { sessions, players, questionPacks, questions, answers } from '@trivia/db';
-import { eq } from 'drizzle-orm';
+import {
+  sessions,
+  players,
+  questionPacks,
+  questions,
+  answers,
+} from '@trivia/db';
 import { Hono } from 'hono';
 import { createSessionsRoute } from '../routes/sessions';
 import { testDb as db } from './setup';
@@ -246,7 +251,7 @@ describe('Sessions API', () => {
 
   describe('POST /sessions/:code/start', () => {
     it('should start game and set first question', async () => {
-      const [testSession] = await db
+      await db
         .insert(sessions)
         .values({
           code: 'TEST01',
@@ -331,7 +336,9 @@ describe('Sessions API', () => {
 
       const app = createTestApp();
 
-      const res = await app.request('/sessions/TEST01/current-question?includeAnswer=true');
+      const res = await app.request(
+        '/sessions/TEST01/current-question?includeAnswer=true'
+      );
 
       expect(res.status).toBe(200);
       const data = await res.json();
@@ -352,7 +359,7 @@ describe('Sessions API', () => {
         })
         .returning();
 
-      const [player] = await db
+      await db
         .insert(players)
         .values({
           sessionId: testSession.id,

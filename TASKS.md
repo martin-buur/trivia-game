@@ -145,6 +145,23 @@
 - [ ] Unit tests (80%+ coverage)
 - [ ] Integration tests for all endpoints
 - [ ] E2E tests for critical flows
+  - [x] **Playwright Setup**
+    - [x] Install Playwright and dependencies
+    - [x] Create playwright.config.ts
+    - [x] Set up test directory structure
+  - [ ] **Core E2E Tests**
+    - [x] Game creation and join flow (host + player)
+    - [ ] Game start and question display
+    - [ ] Answer submission and scoring
+    - [ ] Full game flow from start to finish
+  - [ ] **Additional Test Scenarios**
+    - [ ] Multiple players joining
+    - [ ] Invalid game code handling
+    - [ ] Player disconnection handling
+  - [ ] **Test Infrastructure**
+    - [ ] Page object models
+    - [ ] Test utilities and helpers
+    - [ ] CI integration
 - [ ] Load testing (100+ concurrent players)
 - [ ] Performance monitoring
 - [ ] Error tracking (Sentry)

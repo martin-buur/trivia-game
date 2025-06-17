@@ -90,6 +90,7 @@ export function CreateGame() {
                 {questionPacks.map((pack) => (
                   <Card
                     key={pack.id}
+                    data-testid="question-pack"
                     className={`cursor-pointer transition-all ${
                       selectedPackId === pack.id
                         ? 'ring-2 ring-blue-500 border-blue-500'

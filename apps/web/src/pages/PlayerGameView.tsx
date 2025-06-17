@@ -130,11 +130,7 @@ export function PlayerGameView() {
             {currentQuestion.options.map((option, index) => (
               <Button
                 key={index}
-                variant={
-                  selectedAnswer === index
-                    ? 'primary'
-                    : 'secondary'
-                }
+                variant={selectedAnswer === index ? 'primary' : 'secondary'}
                 className="w-full justify-start text-left p-6"
                 onClick={() => handleAnswerSelect(index)}
                 disabled={hasAnswered}

@@ -12,8 +12,9 @@ import { generateSessionCode } from '@trivia/utils';
 import { wsManager } from '../websocket';
 import type { IWebSocketManager } from '../types/websocket-manager';
 
-// Track active question timers
+// Track active question timers and start times
 const activeTimeouts = new Map<string, NodeJS.Timeout>();
+const questionStartTimes = new Map<string, number>();
 
 // Helper function to get answered count for a question
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,6 +23,113 @@ async function getAnsweredCount(questionId: string, db: any): Promise<number> {
     where: eq(answers.questionId, questionId),
   });
   return answersCount.length;
+}
+
+// Helper function to reveal answer and complete question
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function revealAndCompleteQuestion(sessionCode: string, questionId: string, db: any, ws: IWebSocketManager, isTimeout: boolean = false) {
+  console.log(`Revealing answer for question ${questionId} in session ${sessionCode} (timeout: ${isTimeout})`);
+  
+  try {
+    // Get session with current question and players
+    const session = await db.query.sessions.findFirst({
+      where: eq(sessions.code, sessionCode),
+      with: {
+        currentQuestion: true,
+        players: true,
+      },
+    });
+
+    if (!session || !session.currentQuestion || session.currentQuestion.id !== questionId) {
+      console.log('Session or question not found, skipping reveal');
+      return;
+    }
+
+    // Get current scores and answer status
+    const playersWithAnswers = await db
+      .select({
+        playerId: players.id,
+        deviceId: players.deviceId,
+        nickname: players.nickname,
+        totalScore: players.score,
+        hasAnswered: sql<boolean>`EXISTS (
+          SELECT 1 FROM ${answers} 
+          WHERE ${answers.playerId} = ${players.id} 
+          AND ${answers.questionId} = ${session.currentQuestionId}
+        )`,
+        isCorrect: sql<boolean>`EXISTS (
+          SELECT 1 FROM ${answers} 
+          WHERE ${answers.playerId} = ${players.id} 
+          AND ${answers.questionId} = ${session.currentQuestionId}
+          AND ${answers.isCorrect} = 1
+        )`,
+        selectedOption: sql<number>`(
+          SELECT ${answers.selectedOptionIndex} 
+          FROM ${answers} 
+          WHERE ${answers.playerId} = ${players.id} 
+          AND ${answers.questionId} = ${session.currentQuestionId}
+        )`
+      })
+      .from(players)
+      .where(eq(players.sessionId, session.id))
+      .orderBy(desc(players.score));
+
+    // Broadcast answer revealed event
+    ws.broadcastToRoom(sessionCode, {
+      type: 'answer_revealed',
+      sessionCode: sessionCode,
+      timestamp: new Date().toISOString(),
+      data: {
+        questionId: session.currentQuestion.id,
+        correctAnswerIndex: session.currentQuestion.correctAnswerIndex,
+        playerResults: playersWithAnswers.map((p: any) => ({
+          playerId: p.playerId,
+          nickname: p.nickname,
+          hasAnswered: p.hasAnswered,
+          isCorrect: p.isCorrect,
+          selectedOption: p.selectedOption,
+          totalScore: p.totalScore
+        }))
+      }
+    });
+
+    // Wait a short moment before sending completion event
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Prepare scores for question completed event
+    const scores = playersWithAnswers.map((p: any) => ({
+      playerId: p.deviceId, // Use deviceId so frontend can find it
+      nickname: p.nickname,
+      score: p.totalScore,
+      totalScore: p.totalScore,
+      isCorrect: p.isCorrect
+    }));
+
+    // Get timeout players if this was a timeout
+    const timeoutPlayers = isTimeout ? 
+      playersWithAnswers.filter((p: any) => !p.hasAnswered).map((p: any) => p.deviceId) : 
+      undefined;
+
+    // Broadcast question completion
+    ws.broadcastToRoom(sessionCode, {
+      type: 'question_completed',
+      sessionCode,
+      timestamp: new Date().toISOString(),
+      data: {
+        questionId,
+        correctAnswer: session.currentQuestion.options[session.currentQuestion.correctAnswerIndex],
+        scores,
+        timeoutPlayers
+      }
+    });
+
+    // Clean up question start time
+    questionStartTimes.delete(sessionCode);
+    
+    console.log(`Answer revealed and question completed for session ${sessionCode}`);
+  } catch (error) {
+    console.error('Error revealing answer and completing question:', error);
+  }
 }
 
 // Helper function to handle question timeout
@@ -81,33 +189,10 @@ export async function handleQuestionTimeout(sessionCode: string, questionId: str
           }
         });
       }
-
-      // Get updated scores after timeout processing
-      const updatedPlayers = await db.query.players.findMany({
-        where: eq(players.sessionId, session.id),
-      });
-
-      const scores = updatedPlayers.map((p: any) => ({
-        playerId: p.deviceId, // Use deviceId so frontend can find it
-        nickname: p.nickname,
-        score: p.score,
-        totalScore: p.score,
-        isCorrect: answeredPlayerIds.has(p.id) // Only those who answered before timeout
-      }));
-
-      // Broadcast question completion with timeout results
-      ws.broadcastToRoom(sessionCode, {
-        type: 'question_completed',
-        sessionCode,
-        timestamp: new Date().toISOString(),
-        data: {
-          questionId,
-          correctAnswer: session.currentQuestion.correctAnswerIndex.toString(),
-          scores,
-          timeoutPlayers: unansweredPlayers.map((p: any) => p.deviceId)
-        }
-      });
     }
+
+    // Reveal answer and complete question
+    await revealAndCompleteQuestion(sessionCode, questionId, db, ws, true);
   } catch (error) {
     console.error('Error handling question timeout:', error);
   }
@@ -294,7 +379,7 @@ export function createSessionsRoute(db = defaultDb, ws: IWebSocketManager = wsMa
         clearTimeout(existingTimeout);
       }
 
-      // Set up question timeout
+      // Set up question timeout and track start time
       const timeLimit = (firstQuestion.timeLimit || 30) * 1000; // Convert to milliseconds
       const timeout = setTimeout(() => {
         handleQuestionTimeout(code.toUpperCase(), firstQuestion.id, db, ws);
@@ -302,6 +387,7 @@ export function createSessionsRoute(db = defaultDb, ws: IWebSocketManager = wsMa
       }, timeLimit);
       
       activeTimeouts.set(code.toUpperCase(), timeout);
+      questionStartTimes.set(code.toUpperCase(), Date.now());
       console.log(`Set timeout for session ${code.toUpperCase()}, question ${firstQuestion.id} (${timeLimit}ms)`);
 
       // Broadcast game started event
@@ -453,13 +539,37 @@ export function createSessionsRoute(db = defaultDb, ws: IWebSocketManager = wsMa
         }
       });
 
-      // If all players have answered, clear the timeout early
+      // If all players have answered, check if we should auto-reveal
       if (allAnswered) {
         const existingTimeout = activeTimeouts.get(code.toUpperCase());
         if (existingTimeout) {
           clearTimeout(existingTimeout);
           activeTimeouts.delete(code.toUpperCase());
           console.log(`All players answered, cleared timeout for session ${code.toUpperCase()}`);
+        }
+
+        // Check if 5 seconds have passed since question started
+        const questionStartTime = questionStartTimes.get(code.toUpperCase());
+        if (questionStartTime) {
+          const elapsedTime = Date.now() - questionStartTime;
+          const minRevealTime = 5000; // 5 seconds
+          
+          if (elapsedTime >= minRevealTime) {
+            // Auto-reveal immediately
+            console.log(`Auto-revealing answer for session ${code.toUpperCase()} (${elapsedTime}ms elapsed)`);
+            await revealAndCompleteQuestion(code.toUpperCase(), session.currentQuestion!.id, db, ws, false);
+          } else {
+            // Schedule auto-reveal after remaining time
+            const remainingTime = minRevealTime - elapsedTime;
+            console.log(`Scheduling auto-reveal for session ${code.toUpperCase()} in ${remainingTime}ms`);
+            
+            const revealTimeout = setTimeout(() => {
+              revealAndCompleteQuestion(code.toUpperCase(), session.currentQuestion!.id, db, ws, false);
+              activeTimeouts.delete(code.toUpperCase());
+            }, remainingTime);
+            
+            activeTimeouts.set(code.toUpperCase(), revealTimeout);
+          }
         }
       }
 
@@ -537,7 +647,7 @@ export function createSessionsRoute(db = defaultDb, ws: IWebSocketManager = wsMa
         data: {
           questionId: session.currentQuestion.id,
           correctAnswerIndex: session.currentQuestion.correctAnswerIndex,
-          playerResults: playersWithAnswers.map(p => ({
+          playerResults: playersWithAnswers.map((p: any) => ({
             playerId: p.playerId,
             nickname: p.nickname,
             hasAnswered: p.hasAnswered,
@@ -669,7 +779,7 @@ export function createSessionsRoute(db = defaultDb, ws: IWebSocketManager = wsMa
         clearTimeout(existingTimeout);
       }
 
-      // Set up question timeout
+      // Set up question timeout and track start time
       const timeLimit = (nextQuestion.timeLimit || 30) * 1000; // Convert to milliseconds
       const timeout = setTimeout(() => {
         handleQuestionTimeout(code.toUpperCase(), nextQuestion.id, db, ws);
@@ -677,6 +787,7 @@ export function createSessionsRoute(db = defaultDb, ws: IWebSocketManager = wsMa
       }, timeLimit);
       
       activeTimeouts.set(code.toUpperCase(), timeout);
+      questionStartTimes.set(code.toUpperCase(), Date.now());
       console.log(`Set timeout for session ${code.toUpperCase()}, question ${nextQuestion.id} (${timeLimit}ms)`);
 
       // Broadcast question revealed event

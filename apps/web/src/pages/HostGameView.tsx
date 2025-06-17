@@ -16,6 +16,7 @@ export function HostGameView() {
     new Set()
   );
   const [showingAnswer, setShowingAnswer] = useState(false);
+  const [autoRevealed, setAutoRevealed] = useState(false);
   const [questionNumber, setQuestionNumber] = useState(1);
   const [totalQuestions, setTotalQuestions] = useState(0);
   const { execute: nextQuestion, loading: loadingNext } = useApi<{
@@ -74,10 +75,14 @@ export function HostGameView() {
           correctAnswerIndex: revealedEvent.data.correctAnswerIndex
         });
         setShowingAnswer(true);
+        // If we didn't manually reveal, it was auto-revealed
+        if (!showingAnswer) {
+          setAutoRevealed(true);
+        }
       }
     });
     return unsubscribe;
-  }, [subscribe, currentQuestion]);
+  }, [subscribe, currentQuestion, showingAnswer]);
 
   // Load initial game state
   useEffect(() => {
@@ -121,6 +126,7 @@ export function HostGameView() {
   useEffect(() => {
     setAnsweredPlayers(new Set());
     setShowingAnswer(false);
+    setAutoRevealed(false);
   }, [currentQuestion?.id]);
 
   const handleRevealAnswer = async () => {
@@ -251,7 +257,12 @@ export function HostGameView() {
             })}
           </div>
 
-          <div className="mt-8 flex justify-center gap-4">
+          <div className="mt-8 flex flex-col items-center gap-4">
+            {autoRevealed && showingAnswer && (
+              <p className="text-sm text-muted-foreground">
+                Answer revealed automatically
+              </p>
+            )}
             {!showingAnswer ? (
               <Button
                 variant="large"

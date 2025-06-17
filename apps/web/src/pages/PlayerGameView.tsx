@@ -232,9 +232,9 @@ export function PlayerGameView() {
               if (correctAnswerIndex !== null) {
                 // Answer has been revealed
                 if (isCorrectAnswer) {
-                  buttonClassName += " border-green-500 bg-green-50 dark:bg-green-950";
+                  buttonClassName += " border-green-500 bg-green-100 dark:bg-green-900/30";
                 } else if (isSelectedAnswer && !isCorrectAnswer) {
-                  buttonClassName += " border-red-500 bg-red-50 dark:bg-red-950";
+                  buttonClassName += " border-red-500 bg-red-100 dark:bg-red-900/30";
                 }
               } else if (isSelectedAnswer) {
                 // Answer not revealed yet, but this is selected

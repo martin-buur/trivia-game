@@ -220,9 +220,9 @@ export function HostGameView() {
                     p-6 rounded-lg border-2 transition-all duration-300
                     ${
                       showingAnswer && isCorrectAnswer
-                        ? 'border-green-500 bg-green-50 dark:bg-green-950 scale-105 shadow-lg'
+                        ? 'border-green-500 bg-green-100 dark:bg-green-900/30 scale-105 shadow-lg'
                         : showingAnswer && !isCorrectAnswer
-                        ? 'border-border opacity-50'
+                        ? 'border-gray-300 dark:border-gray-700 opacity-60'
                         : 'border-border'
                     }
                   `}

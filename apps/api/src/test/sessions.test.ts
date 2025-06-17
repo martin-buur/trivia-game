@@ -765,16 +765,19 @@ describe('Sessions API', () => {
       expect(timeoutAnswers[0].isCorrect).toBe(0);
       expect(timeoutAnswers[0].pointsEarned).toBe(0);
 
-      // Check that websocket broadcast was called
-      expect(mockWsManager.broadcastToRoom).toHaveBeenCalledWith(
-        'TEST01',
-        expect.objectContaining({
-          type: 'question_completed',
-          data: expect.objectContaining({
-            timeoutPlayers: ['player-2'] // Should use deviceId, not player.id
-          })
-        })
+      // Check that both answer_revealed and question_completed were broadcast
+      const broadcastCalls = mockWsManager.broadcastToRoom.mock.calls;
+      
+      const answerRevealedCall = broadcastCalls.find(
+        call => call[1].type === 'answer_revealed'
       );
+      expect(answerRevealedCall).toBeTruthy();
+      
+      const questionCompletedCall = broadcastCalls.find(
+        call => call[1].type === 'question_completed'
+      );
+      expect(questionCompletedCall).toBeTruthy();
+      expect(questionCompletedCall?.[1].data.timeoutPlayers).toContain('player-2');
     });
 
     it('should not create timeout answers if all players already answered', async () => {
@@ -873,6 +876,241 @@ describe('Sessions API', () => {
           })
         })
       );
+    });
+  });
+
+  describe('Auto-reveal feature', () => {
+    it('should auto-reveal answer when timeout occurs', async () => {
+      // Create session
+      const [sessionData] = await db
+        .insert(sessions)
+        .values({
+          code: 'AUTO01',
+          hostDeviceId: 'host-123',
+          questionPackId: testPack.id,
+          status: 'playing',
+          currentQuestionId: testQuestions[0].id,
+        })
+        .returning();
+
+      // Add players
+      const [player1, player2] = await db
+        .insert(players)
+        .values([
+          {
+            sessionId: sessionData.id,
+            deviceId: 'player-1',
+            nickname: 'Alice',
+            score: 0,
+          },
+          {
+            sessionId: sessionData.id,
+            deviceId: 'player-2',
+            nickname: 'Bob',
+            score: 0,
+          },
+        ])
+        .returning();
+
+      // Only player 1 answers
+      await db.insert(answers).values({
+        playerId: player1.id,
+        questionId: testQuestions[0].id,
+        selectedOptionIndex: 0,
+        isCorrect: 1,
+        pointsEarned: 100,
+      });
+
+      // Mock the timeout handler
+      const { handleQuestionTimeout } = await import('../routes/sessions');
+      
+      // Call timeout handler
+      await handleQuestionTimeout('AUTO01', testQuestions[0].id, db, mockWsManager);
+
+      // Check that answer_revealed event was broadcast
+      const broadcastCalls = mockWsManager.broadcastToRoom.mock.calls;
+      const answerRevealedCall = broadcastCalls.find(
+        call => call[1].type === 'answer_revealed'
+      );
+      
+      expect(answerRevealedCall).toBeTruthy();
+      expect(answerRevealedCall?.[0]).toBe('AUTO01');
+      expect(answerRevealedCall?.[1].data.questionId).toBe(testQuestions[0].id);
+      expect(answerRevealedCall?.[1].data.correctAnswerIndex).toBe(0);
+      
+      // Check that both players are in the results
+      const playerResults = answerRevealedCall?.[1].data.playerResults;
+      expect(playerResults).toHaveLength(2);
+      
+      const alice = playerResults.find((p: any) => p.nickname === 'Alice');
+      expect(alice).toBeTruthy();
+      expect(alice.hasAnswered).toBe(true);
+      expect(alice.isCorrect).toBe(true);
+      
+      const bob = playerResults.find((p: any) => p.nickname === 'Bob');
+      expect(bob).toBeTruthy();
+      expect(bob.hasAnswered).toBe(true); // Timeout created an answer for Bob
+      expect(bob.isCorrect).toBe(false);
+      expect(bob.selectedOption).toBe(-1); // -1 indicates timeout
+
+      // Check that question_completed was also broadcast
+      const questionCompletedCall = broadcastCalls.find(
+        call => call[1].type === 'question_completed'
+      );
+      
+      expect(questionCompletedCall).toBeTruthy();
+      expect(questionCompletedCall?.[1].data.timeoutPlayers).toEqual(['player-2']);
+    });
+
+    it('should auto-reveal answer when all players answer and 5 seconds have passed', async () => {
+      vi.useFakeTimers();
+      
+      // Create session
+      const [sessionData] = await db
+        .insert(sessions)
+        .values({
+          code: 'AUTO02',
+          hostDeviceId: 'host-123',
+          questionPackId: testPack.id,
+          status: 'waiting', // Start as waiting
+        })
+        .returning();
+
+      // Add players
+      await db.insert(players).values([
+        {
+          sessionId: sessionData.id,
+          deviceId: 'player-1',
+          nickname: 'Alice',
+          score: 0,
+        },
+        {
+          sessionId: sessionData.id,
+          deviceId: 'player-2',
+          nickname: 'Bob',
+          score: 0,
+        },
+      ]);
+
+      const app = createTestApp();
+
+      // Start the game to set question start time
+      await app.request('/sessions/AUTO02/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hostDeviceId: 'host-123' }),
+      });
+
+      // Fast forward 6 seconds
+      vi.advanceTimersByTime(6000);
+
+      // Clear previous mock calls
+      mockWsManager.clearEvents();
+
+      // Both players answer
+      await app.request('/sessions/AUTO02/answers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deviceId: 'player-1',
+          answerIndex: 0,
+        }),
+      });
+
+      await app.request('/sessions/AUTO02/answers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deviceId: 'player-2',
+          answerIndex: 1,
+        }),
+      });
+
+      // Run any pending timers
+      await vi.runAllTimersAsync();
+
+      // Should auto-reveal immediately since 5+ seconds have passed
+      const broadcastCalls = mockWsManager.broadcastToRoom.mock.calls;
+      const answerRevealedCall = broadcastCalls.find(
+        call => call[1].type === 'answer_revealed' && call[0] === 'AUTO02'
+      );
+      
+      expect(answerRevealedCall).toBeTruthy();
+      expect(answerRevealedCall?.[0]).toBe('AUTO02');
+
+      vi.useRealTimers();
+    }, 10000);
+
+    it('should schedule auto-reveal after 5 seconds when all players answer quickly', async () => {
+      vi.useFakeTimers();
+      
+      // Create session
+      const [sessionData] = await db
+        .insert(sessions)
+        .values({
+          code: 'AUTO03',
+          hostDeviceId: 'host-123',
+          questionPackId: testPack.id,
+          status: 'waiting', // Start as waiting
+        })
+        .returning();
+
+      // Add one player
+      await db.insert(players).values({
+        sessionId: sessionData.id,
+        deviceId: 'player-1',
+        nickname: 'Alice',
+        score: 0,
+      });
+
+      const app = createTestApp();
+
+      // Start the game
+      await app.request('/sessions/AUTO03/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hostDeviceId: 'host-123' }),
+      });
+
+      // Answer immediately (within 1 second)
+      vi.advanceTimersByTime(1000);
+
+      // Clear previous mock calls
+      mockWsManager.clearEvents();
+
+      await app.request('/sessions/AUTO03/answers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deviceId: 'player-1',
+          answerIndex: 0,
+        }),
+      });
+
+      // Should not reveal immediately
+      let broadcastCalls = mockWsManager.broadcastToRoom.mock.calls;
+      let answerRevealedCall = broadcastCalls.find(
+        call => call[1].type === 'answer_revealed' && call[0] === 'AUTO03'
+      );
+      
+      expect(answerRevealedCall).toBeFalsy();
+
+      // Fast forward to 5 seconds total
+      vi.advanceTimersByTime(4000);
+      
+      // Run any async timers
+      await vi.runAllTimersAsync();
+
+      // Now it should have auto-revealed
+      broadcastCalls = mockWsManager.broadcastToRoom.mock.calls;
+      answerRevealedCall = broadcastCalls.find(
+        call => call[1].type === 'answer_revealed' && call[0] === 'AUTO03'
+      );
+      
+      expect(answerRevealedCall).toBeTruthy();
+      expect(answerRevealedCall?.[0]).toBe('AUTO03');
+
+      vi.useRealTimers();
     });
   });
 });

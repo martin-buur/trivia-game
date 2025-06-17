@@ -1,11 +1,14 @@
 import { db } from './client';
-import { questionPacks, questions } from './schema';
+import { questionPacks, questions, answers, players, sessions } from './schema';
 
 async function seed() {
   console.log('🌱 Starting seed...');
 
   try {
-    // Clear existing data
+    // Clear existing data in correct order (respecting foreign key constraints)
+    await db.delete(answers);
+    await db.delete(players);
+    await db.delete(sessions);
     await db.delete(questions);
     await db.delete(questionPacks);
 

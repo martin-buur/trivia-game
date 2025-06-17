@@ -3,8 +3,9 @@ import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { db as defaultDb, sessions, players } from '@trivia/db';
 import { wsManager } from '../websocket';
+import type { IWebSocketManager } from '../types/websocket-manager';
 
-export function createPlayersRoute(db = defaultDb) {
+export function createPlayersRoute(db = defaultDb, ws: IWebSocketManager = wsManager) {
   const playersRoute = new Hono();
 
   // Join session schema
@@ -61,7 +62,7 @@ export function createPlayersRoute(db = defaultDb) {
         .returning();
 
       // Broadcast player joined event
-      wsManager.broadcastToRoom(session.code, {
+      ws.broadcastToRoom(session.code, {
         type: 'player_joined',
         sessionCode: session.code,
         timestamp: new Date().toISOString(),
@@ -149,7 +150,7 @@ export function createPlayersRoute(db = defaultDb) {
 
       // Broadcast player left event
       if (session) {
-        wsManager.broadcastToRoom(session.code, {
+        ws.broadcastToRoom(session.code, {
           type: 'player_left',
           sessionCode: session.code,
           timestamp: new Date().toISOString(),

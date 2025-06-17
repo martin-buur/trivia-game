@@ -9,11 +9,12 @@ import {
 import { Hono } from 'hono';
 import { createSessionsRoute } from '../routes/sessions';
 import { testDb as db } from './setup';
+import { mockWsManager } from './mocks/websocket-mock';
 
 // Helper to create test app
 const createTestApp = () => {
   const app = new Hono();
-  const sessionsRoute = createSessionsRoute(db);
+  const sessionsRoute = createSessionsRoute(db, mockWsManager);
   app.route('/sessions', sessionsRoute);
   return app;
 };
@@ -29,6 +30,9 @@ describe('Sessions API', () => {
     await db.delete(sessions);
     await db.delete(questions);
     await db.delete(questionPacks);
+
+    // Clear WebSocket mock events
+    mockWsManager.clearEvents();
 
     // Create test question pack
     [testPack] = await db
@@ -499,13 +503,29 @@ describe('Sessions API', () => {
     });
 
     it('should finish game when no more questions', async () => {
-      await db.insert(sessions).values({
+      const [testSession] = await db.insert(sessions).values({
         code: 'TEST01',
         hostDeviceId: 'host-123',
         questionPackId: testPack.id,
         status: 'playing',
         currentQuestionId: testQuestions[2].id, // Last question
-      });
+      }).returning();
+
+      // Add players to the session so there's a winner
+      await db.insert(players).values([
+        {
+          sessionId: testSession.id,
+          nickname: 'Player1',
+          deviceId: 'device-1',
+          score: 300,
+        },
+        {
+          sessionId: testSession.id,
+          nickname: 'Player2',
+          deviceId: 'device-2',
+          score: 200,
+        },
+      ]);
 
       const app = createTestApp();
 
@@ -638,8 +658,8 @@ describe('Sessions API', () => {
       expect(data.unansweredPlayers).toHaveLength(1);
       
       // Check answered players
-      expect(data.answeredPlayers.map((p: any) => p.nickname)).toContain('Alice');
-      expect(data.answeredPlayers.map((p: any) => p.nickname)).toContain('Bob');
+      expect(data.answeredPlayers.map((p: { nickname: string }) => p.nickname)).toContain('Alice');
+      expect(data.answeredPlayers.map((p: { nickname: string }) => p.nickname)).toContain('Bob');
       
       // Check unanswered players
       expect(data.unansweredPlayers[0].nickname).toBe('Charlie');

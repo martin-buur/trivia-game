@@ -10,6 +10,7 @@ import {
 } from '@trivia/db';
 import { generateSessionCode } from '@trivia/utils';
 import { wsManager } from '../websocket';
+import type { IWebSocketManager } from '../types/websocket-manager';
 
 // Helper function to get answered count for a question
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -20,7 +21,7 @@ async function getAnsweredCount(questionId: string, db: any): Promise<number> {
   return answersCount.length;
 }
 
-export function createSessionsRoute(db = defaultDb) {
+export function createSessionsRoute(db = defaultDb, ws: IWebSocketManager = wsManager) {
   const sessionsRoute = new Hono();
 
   // Create session schema
@@ -196,7 +197,7 @@ export function createSessionsRoute(db = defaultDb) {
         .returning();
 
       // Broadcast game started event
-      wsManager.broadcastToRoom(code.toUpperCase(), {
+      ws.broadcastToRoom(code.toUpperCase(), {
         type: 'game_started',
         sessionCode: code.toUpperCase(),
         timestamp: new Date().toISOString(),
@@ -327,7 +328,7 @@ export function createSessionsRoute(db = defaultDb) {
         .returning();
 
       // Broadcast answer submitted event
-      wsManager.broadcastToRoom(code.toUpperCase(), {
+      ws.broadcastToRoom(code.toUpperCase(), {
         type: 'answer_submitted',
         sessionCode: code.toUpperCase(),
         timestamp: new Date().toISOString(),
@@ -414,7 +415,7 @@ export function createSessionsRoute(db = defaultDb) {
         const winner = finalScores[0];
         
         // Broadcast game finished event
-        wsManager.broadcastToRoom(code.toUpperCase(), {
+        ws.broadcastToRoom(code.toUpperCase(), {
           type: 'game_finished',
           sessionCode: code.toUpperCase(),
           timestamp: new Date().toISOString(),
@@ -425,11 +426,11 @@ export function createSessionsRoute(db = defaultDb) {
               totalScore: player.score,
               rank: index + 1
             })),
-            winner: {
+            winner: winner ? {
               playerId: winner.id,
               nickname: winner.nickname,
               totalScore: winner.score
-            }
+            } : null
           }
         });
 
@@ -450,7 +451,7 @@ export function createSessionsRoute(db = defaultDb) {
         .returning();
 
       // Broadcast question revealed event
-      wsManager.broadcastToRoom(code.toUpperCase(), {
+      ws.broadcastToRoom(code.toUpperCase(), {
         type: 'question_revealed',
         sessionCode: code.toUpperCase(),
         timestamp: new Date().toISOString(),

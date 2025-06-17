@@ -115,7 +115,7 @@ export interface GameFinishedEvent extends BaseWebSocketEvent {
       playerId: string;
       nickname: string;
       totalScore: number;
-    };
+    } | null;
   };
 }
 

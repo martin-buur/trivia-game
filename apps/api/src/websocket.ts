@@ -5,6 +5,7 @@ import type {
   JoinRoomMessage, 
   LeaveRoomMessage 
 } from '@trivia/types';
+import type { IWebSocketManager } from './types/websocket-manager';
 
 interface GameClient {
   ws: WebSocket;
@@ -15,23 +16,23 @@ interface GameClient {
   lastPing: number;
 }
 
-class WebSocketManager {
+class WebSocketManager implements IWebSocketManager {
   private wss: WebSocketServer | null = null;
   private clients: Map<string, GameClient> = new Map();
   private rooms: Map<string, Set<string>> = new Map();
   private pingInterval: number | null = null;
 
-  initialize(server: any) {
+  initialize(server: unknown) {
     this.wss = new WebSocketServer({ 
       server,
       path: '/ws',
-      verifyClient: (_info: any) => {
+      verifyClient: (_info: unknown) => {
         // Basic validation - could add more security here
         return true;
       }
     });
 
-    this.wss.on('connection', (ws: WebSocket, _request: any) => {
+    this.wss.on('connection', (ws: WebSocket, _request: unknown) => {
       const clientId = this.generateClientId();
       console.log(`WebSocket connection established: ${clientId}`);
 
@@ -43,7 +44,7 @@ class WebSocketManager {
         data: { clientId }
       });
 
-      ws.on('message', (data: any) => {
+      ws.on('message', (data: unknown) => {
         try {
           const message = JSON.parse(data.toString());
           this.handleClientMessage(clientId, ws, message);
@@ -58,7 +59,7 @@ class WebSocketManager {
         this.handleClientDisconnect(clientId);
       });
 
-      ws.on('error', (error: any) => {
+      ws.on('error', (error: unknown) => {
         console.error(`WebSocket error for client ${clientId}:`, error);
         this.handleClientDisconnect(clientId);
       });
@@ -92,7 +93,7 @@ class WebSocketManager {
         this.handleLeaveRoom(clientId, message);
         break;
       default:
-        console.warn(`Unknown message type: ${(message as any).type}`);
+        console.warn(`Unknown message type: ${(message as { type: string }).type}`);
     }
   }
 

@@ -4,11 +4,12 @@ import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { createPlayersRoute } from '../routes/players';
 import { testDb as db } from './setup';
+import { mockWsManager } from './mocks/websocket-mock';
 
 // Helper to create test app
 const createTestApp = () => {
   const app = new Hono();
-  const playersRoute = createPlayersRoute(db);
+  const playersRoute = createPlayersRoute(db, mockWsManager);
   app.route('/', playersRoute);
   return app;
 };
@@ -22,6 +23,9 @@ describe('Player Management API', () => {
     await db.delete(players);
     await db.delete(sessions);
     await db.delete(questionPacks);
+
+    // Clear WebSocket mock events
+    mockWsManager.clearEvents();
 
     // Create test question pack
     [testPack] = await db

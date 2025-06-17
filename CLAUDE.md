@@ -153,6 +153,12 @@ pnpm test:watch    # Run tests in watch mode
 pnpm test:run      # Run tests once
 pnpm test:ui       # Run tests with Vitest UI
 
+# E2E Testing (from apps/web directory)
+pnpm test:e2e       # Run E2E tests (may reuse existing servers)
+pnpm test:e2e:clean # Run E2E tests with fresh servers (RECOMMENDED)
+pnpm test:e2e:ui    # Run E2E tests in UI mode
+pnpm test:e2e:debug # Debug E2E tests
+
 # API Testing (with dev server running)
 curl http://localhost:3001/                    # Health check
 curl http://localhost:3001/question-packs       # List question packs
@@ -256,6 +262,18 @@ The game uses WebSocket connections for real-time updates:
 - Integration tests for API endpoints
 - E2E tests for critical user flows (create game, join game, answer question)
 - Load tests to ensure 100+ concurrent players work smoothly
+
+### E2E Testing Notes
+
+**IMPORTANT**: E2E tests use a separate database (`.pglite/e2e-data`) to avoid contaminating development data.
+
+1. **Server Reuse Issue**: Playwright's `reuseExistingServer` option can cause tests to fail if a dev server is already running without the `E2E_TEST` environment variable. The API server won't use the E2E database and tests will fail with "question pack not found" errors.
+
+2. **Solutions**:
+   - Use `pnpm test:e2e:clean` or `CI=true pnpm test:e2e` to force fresh server starts
+   - Kill existing servers: `lsof -ti:3000,3001 | xargs kill -9`
+
+3. **Timeout Test Behavior**: The server-side timeout fires when ~1 second remains on the timer, not exactly at 0s. This is expected behavior.
 
 ## Code Quality Requirements
 

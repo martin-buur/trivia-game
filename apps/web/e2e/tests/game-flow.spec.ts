@@ -288,6 +288,8 @@ test.describe('Game Flow', () => {
   });
 
   test('player timeout behavior - server handles timeout when player doesnt answer', async ({ browser }) => {
+    // Tests server-side timeout handling when a player doesn't answer
+    // Note: Server timeout fires when ~1s remains on timer, not exactly at 0s
     test.setTimeout(15000); // 3s timeout + buffer for setup and processing
     
     const hostContext = await browser.newContext();

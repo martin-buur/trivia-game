@@ -34,15 +34,15 @@
   - [x] Fetch and display question packs
   - [x] Create session via API
   - [x] Navigate to host lobby
-- [ ] Join game flow
-  - [ ] Session code input
-  - [ ] Player name entry
-  - [ ] Join via API
+- [x] Join game flow
+  - [x] Session code input
+  - [x] Player name entry
+  - [x] Join via API
 
 #### 2. Basic Game Views
 
 - [x] Host lobby (show code, players, start button)
-- [ ] Player waiting room
+- [x] Player waiting room
 - [ ] Simple question display (no timer yet)
 - [ ] Answer selection for players
 - [ ] Basic score display

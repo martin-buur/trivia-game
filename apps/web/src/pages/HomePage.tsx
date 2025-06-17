@@ -1,14 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Input, Card } from '@/components/ui';
-import { api, useApi } from '@/lib/api';
 
 export function HomePage() {
   const navigate = useNavigate();
   const [joinCode, setJoinCode] = useState('');
   const [showJoinInput, setShowJoinInput] = useState(false);
-  const { loading: creating } = useApi();
-  const { execute: checkSession, loading: checking } = useApi();
 
   const handleCreateGame = async () => {
     navigate('/create');
@@ -16,15 +13,7 @@ export function HomePage() {
 
   const handleJoinGame = async () => {
     if (!joinCode.trim()) return;
-
-    try {
-      // Check if session exists
-      await checkSession(api.sessions.get(joinCode.toUpperCase()));
-      navigate(`/play/${joinCode.toUpperCase()}`);
-    } catch (error) {
-      console.error('Failed to join game:', error);
-      // In a real app, show error message
-    }
+    navigate(`/join/${joinCode.toUpperCase()}`);
   };
 
   return (
@@ -58,12 +47,7 @@ export function HomePage() {
 
           {!showJoinInput ? (
             <div className="space-y-4">
-              <Button
-                variant="large"
-                fullWidth
-                onClick={handleCreateGame}
-                disabled={creating}
-              >
+              <Button variant="large" fullWidth onClick={handleCreateGame}>
                 Create Game
               </Button>
 
@@ -107,7 +91,7 @@ export function HomePage() {
                   variant="primary"
                   fullWidth
                   onClick={handleJoinGame}
-                  disabled={!joinCode.trim() || checking}
+                  disabled={!joinCode.trim()}
                 >
                   Join
                 </Button>

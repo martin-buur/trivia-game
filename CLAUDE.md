@@ -54,12 +54,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - HostLobby view showing game code, players, and game info
   - Player list updates (currently polling every 2 seconds, to be replaced with WebSocket)
   - Proper error handling and loading states
+- **Join game flow completed**:
+  - JoinGame page with session validation
+  - Nickname entry form with proper validation
+  - PlayerWaitingRoom showing player info and lobby status
+  - Real-time player list updates (polling every 2 seconds)
+  - Error handling for invalid codes and game states
+  - Fully responsive design for mobile and desktop
 
 ### 🚀 Next Steps
 
-1. **Join Game Flow**: Implement player join flow with session code validation and name entry
-2. **Player Waiting Room**: Build the player view while waiting for game to start
-3. **Game Flow API**: Questions, answers, scoring endpoints
+1. **Game Flow API**: Questions, answers, scoring endpoints
+2. **Host Game Controls**: Start game, advance questions functionality
+3. **Player Game View**: Display questions and answer selection
 4. **Real-time Integration**: Set up WebSocket connections with @hono/node-ws to replace polling
 5. **State Management**: Implement Zustand stores for game state
 

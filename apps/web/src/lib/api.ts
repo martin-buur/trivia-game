@@ -79,7 +79,8 @@ export const api = {
           body: JSON.stringify({ deviceId, nickname }),
         }
       );
-      return handleResponse<Player>(response);
+      const result = await handleResponse<{ player: Player }>(response);
+      return result.player;
     },
 
     leave: async (sessionCode: string, deviceId: string): Promise<void> => {

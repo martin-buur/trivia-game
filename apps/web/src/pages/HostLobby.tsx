@@ -136,7 +136,7 @@ export function HostLobby() {
                   <p className="text-sm text-gray-600">Question Pack</p>
                   <p className="font-medium">
                     {'questionPack' in session && session.questionPack
-                      ? (session.questionPack as any).name
+                      ? (session.questionPack as { name: string }).name
                       : 'Loading...'}
                   </p>
                 </div>

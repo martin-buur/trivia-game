@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   sessions,
   players,
@@ -694,6 +694,185 @@ describe('Sessions API', () => {
       expect(res.status).toBe(404);
       const data = await res.json();
       expect(data.error).toBe('Session not found');
+    });
+  });
+
+  describe('Question Timeout Functionality', () => {
+    beforeEach(() => {
+      // Reset all spies before each test
+      vi.clearAllMocks();
+      // Create spy for broadcastToRoom
+      vi.spyOn(mockWsManager, 'broadcastToRoom');
+    });
+
+    it('should create timeout answers for players who dont respond in time', async () => {
+      // Create session
+      const [sessionData] = await db
+        .insert(sessions)
+        .values({
+          code: 'TEST01',
+          hostDeviceId: 'host-123',
+          questionPackId: testPack.id,
+          status: 'playing',
+          currentQuestionId: testQuestions[0].id,
+        })
+        .returning();
+
+      // Add two players
+      const [player1, player2] = await db
+        .insert(players)
+        .values([
+          {
+            sessionId: sessionData.id,
+            deviceId: 'player-1',
+            nickname: 'Alice',
+            score: 0,
+          },
+          {
+            sessionId: sessionData.id,
+            deviceId: 'player-2',
+            nickname: 'Bob',
+            score: 0,
+          },
+        ])
+        .returning();
+
+      // Player 1 answers
+      await db.insert(answers).values({
+        playerId: player1.id,
+        questionId: testQuestions[0].id,
+        selectedOptionIndex: 0,
+        isCorrect: 1,
+        pointsEarned: 100,
+      });
+
+      // Mock the timeout handler directly (since we can't wait for real timeout in tests)
+      const { handleQuestionTimeout } = await import('../routes/sessions');
+      
+      // Call timeout handler manually
+      await handleQuestionTimeout('TEST01', testQuestions[0].id, db, mockWsManager);
+
+      // Check that timeout answer was created for player 2
+      const timeoutAnswers = await db.query.answers.findMany({
+        where: (answers, { eq, and }) => and(
+          eq(answers.questionId, testQuestions[0].id),
+          eq(answers.playerId, player2.id)
+        ),
+      });
+
+      expect(timeoutAnswers).toHaveLength(1);
+      expect(timeoutAnswers[0].selectedOptionIndex).toBe(-1); // Timeout indicator
+      expect(timeoutAnswers[0].isCorrect).toBe(0);
+      expect(timeoutAnswers[0].pointsEarned).toBe(0);
+
+      // Check that websocket broadcast was called
+      expect(mockWsManager.broadcastToRoom).toHaveBeenCalledWith(
+        'TEST01',
+        expect.objectContaining({
+          type: 'question_completed',
+          data: expect.objectContaining({
+            timeoutPlayers: ['player-2'] // Should use deviceId, not player.id
+          })
+        })
+      );
+    });
+
+    it('should not create timeout answers if all players already answered', async () => {
+      // Create session
+      const [sessionData] = await db
+        .insert(sessions)
+        .values({
+          code: 'TEST02',
+          hostDeviceId: 'host-123',
+          questionPackId: testPack.id,
+          status: 'playing',
+          currentQuestionId: testQuestions[0].id,
+        })
+        .returning();
+
+      // Add player
+      const [player1] = await db
+        .insert(players)
+        .values([
+          {
+            sessionId: sessionData.id,
+            deviceId: 'player-1',
+            nickname: 'Alice',
+            score: 0,
+          },
+        ])
+        .returning();
+
+      // Player answers
+      await db.insert(answers).values({
+        playerId: player1.id,
+        questionId: testQuestions[0].id,
+        selectedOptionIndex: 0,
+        isCorrect: 1,
+        pointsEarned: 100,
+      });
+
+      // Mock the timeout handler directly
+      const { handleQuestionTimeout } = await import('../routes/sessions');
+      
+      // Call timeout handler - should do nothing since player already answered
+      await handleQuestionTimeout('TEST02', testQuestions[0].id, db, mockWsManager);
+
+      // Check that no additional answers were created
+      const allAnswers = await db.query.answers.findMany({
+        where: (answers, { eq }) => eq(answers.questionId, testQuestions[0].id),
+      });
+
+      expect(allAnswers).toHaveLength(1); // Only the original answer
+      expect(allAnswers[0].selectedOptionIndex).toBe(0); // Not a timeout
+    });
+
+    it('should clear timeout when all players answer early', async () => {
+      // This test verifies the early timeout clearing logic in answer submission
+      // Create session
+      const [sessionData] = await db
+        .insert(sessions)
+        .values({
+          code: 'TEST03',
+          hostDeviceId: 'host-123',
+          questionPackId: testPack.id,
+          status: 'playing',
+          currentQuestionId: testQuestions[0].id,
+        })
+        .returning();
+
+      // Add player
+      await db.insert(players).values({
+        sessionId: sessionData.id,
+        deviceId: 'player-1',
+        nickname: 'Alice',
+        score: 0,
+      });
+
+      const app = createTestApp();
+
+      // Submit answer - this should trigger early timeout clearance
+      const res = await app.request('/sessions/TEST03/answers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deviceId: 'player-1',
+          answerIndex: 0,
+        }),
+      });
+
+      expect(res.status).toBe(200);
+
+      // Check that websocket was called with allAnswered: true
+      expect(mockWsManager.broadcastToRoom).toHaveBeenCalledWith(
+        'TEST03',
+        expect.objectContaining({
+          type: 'answer_submitted',
+          data: expect.objectContaining({
+            allAnswered: true
+          })
+        })
+      );
     });
   });
 });

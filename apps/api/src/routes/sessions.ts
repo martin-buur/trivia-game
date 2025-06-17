@@ -12,6 +12,9 @@ import { generateSessionCode } from '@trivia/utils';
 import { wsManager } from '../websocket';
 import type { IWebSocketManager } from '../types/websocket-manager';
 
+// Track active question timers
+const activeTimeouts = new Map<string, NodeJS.Timeout>();
+
 // Helper function to get answered count for a question
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getAnsweredCount(questionId: string, db: any): Promise<number> {
@@ -19,6 +22,95 @@ async function getAnsweredCount(questionId: string, db: any): Promise<number> {
     where: eq(answers.questionId, questionId),
   });
   return answersCount.length;
+}
+
+// Helper function to handle question timeout
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function handleQuestionTimeout(sessionCode: string, questionId: string, db: any, ws: IWebSocketManager) {
+  console.log(`Handling timeout for question ${questionId} in session ${sessionCode}`);
+  
+  try {
+    // Get session with players and answers
+    const session = await db.query.sessions.findFirst({
+      where: eq(sessions.code, sessionCode),
+      with: {
+        players: true,
+        currentQuestion: true,
+      },
+    });
+
+    if (!session || !session.currentQuestion || session.currentQuestion.id !== questionId) {
+      console.log('Session or question not found, skipping timeout');
+      return;
+    }
+
+    // Get existing answers for this question
+    const existingAnswers = await db.query.answers.findMany({
+      where: eq(answers.questionId, questionId),
+    });
+
+    const answeredPlayerIds = new Set(existingAnswers.map(a => a.playerId));
+    const unansweredPlayers = session.players.filter(p => !answeredPlayerIds.has(p.id));
+
+    // Create timeout answers for players who haven't answered
+    if (unansweredPlayers.length > 0) {
+      console.log(`Creating timeout answers for ${unansweredPlayers.length} players`);
+      
+      await db.insert(answers).values(
+        unansweredPlayers.map(player => ({
+          playerId: player.id,
+          questionId: questionId,
+          selectedOptionIndex: -1, // -1 indicates timeout
+          isCorrect: 0, // Always incorrect for timeout
+          pointsEarned: 0, // No points for timeout
+        }))
+      );
+
+      // Broadcast answer_submitted events for each timeout player so host can track them
+      for (const player of unansweredPlayers) {
+        ws.broadcastToRoom(sessionCode, {
+          type: 'answer_submitted',
+          sessionCode,
+          timestamp: new Date().toISOString(),
+          data: {
+            playerId: player.deviceId,
+            nickname: player.nickname,
+            answeredCount: await getAnsweredCount(questionId, db),
+            totalPlayers: session.players.length,
+            allAnswered: true // All answered now (including timeouts)
+          }
+        });
+      }
+
+      // Get updated scores after timeout processing
+      const updatedPlayers = await db.query.players.findMany({
+        where: eq(players.sessionId, session.id),
+      });
+
+      const scores = updatedPlayers.map(p => ({
+        playerId: p.deviceId, // Use deviceId so frontend can find it
+        nickname: p.nickname,
+        score: p.score,
+        totalScore: p.score,
+        isCorrect: answeredPlayerIds.has(p.id) // Only those who answered before timeout
+      }));
+
+      // Broadcast question completion with timeout results
+      ws.broadcastToRoom(sessionCode, {
+        type: 'question_completed',
+        sessionCode,
+        timestamp: new Date().toISOString(),
+        data: {
+          questionId,
+          correctAnswer: session.currentQuestion.correctAnswerIndex,
+          scores,
+          timeoutPlayers: unansweredPlayers.map(p => p.deviceId)
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error handling question timeout:', error);
+  }
 }
 
 export function createSessionsRoute(db = defaultDb, ws: IWebSocketManager = wsManager) {
@@ -196,6 +288,22 @@ export function createSessionsRoute(db = defaultDb, ws: IWebSocketManager = wsMa
         .where(eq(sessions.code, code.toUpperCase()))
         .returning();
 
+      // Clear any existing timeout for this session
+      const existingTimeout = activeTimeouts.get(code.toUpperCase());
+      if (existingTimeout) {
+        clearTimeout(existingTimeout);
+      }
+
+      // Set up question timeout
+      const timeLimit = (firstQuestion.timeLimit || 30) * 1000; // Convert to milliseconds
+      const timeout = setTimeout(() => {
+        handleQuestionTimeout(code.toUpperCase(), firstQuestion.id, db, ws);
+        activeTimeouts.delete(code.toUpperCase());
+      }, timeLimit);
+      
+      activeTimeouts.set(code.toUpperCase(), timeout);
+      console.log(`Set timeout for session ${code.toUpperCase()}, question ${firstQuestion.id} (${timeLimit}ms)`);
+
       // Broadcast game started event
       ws.broadcastToRoom(code.toUpperCase(), {
         type: 'game_started',
@@ -327,6 +435,10 @@ export function createSessionsRoute(db = defaultDb, ws: IWebSocketManager = wsMa
         .where(eq(players.id, player.id))
         .returning();
 
+      // Check if all players have now answered
+      const answeredCount = await getAnsweredCount(session.currentQuestion.id, db);
+      const allAnswered = answeredCount >= session.players.length;
+
       // Broadcast answer submitted event
       ws.broadcastToRoom(code.toUpperCase(), {
         type: 'answer_submitted',
@@ -335,11 +447,21 @@ export function createSessionsRoute(db = defaultDb, ws: IWebSocketManager = wsMa
         data: {
           playerId: player.id,
           nickname: player.nickname,
-          answeredCount: await getAnsweredCount(session.currentQuestion.id, db),
+          answeredCount,
           totalPlayers: session.players.length,
-          allAnswered: false // We'll calculate this properly later
+          allAnswered
         }
       });
+
+      // If all players have answered, clear the timeout early
+      if (allAnswered) {
+        const existingTimeout = activeTimeouts.get(code.toUpperCase());
+        if (existingTimeout) {
+          clearTimeout(existingTimeout);
+          activeTimeouts.delete(code.toUpperCase());
+          console.log(`All players answered, cleared timeout for session ${code.toUpperCase()}`);
+        }
+      }
 
       return c.json({
         correct: isCorrect,
@@ -397,6 +519,13 @@ export function createSessionsRoute(db = defaultDb, ws: IWebSocketManager = wsMa
 
       if (!nextQuestion) {
         // No more questions, end the game
+        // Clear any existing timeout for this session
+        const existingTimeout = activeTimeouts.get(code.toUpperCase());
+        if (existingTimeout) {
+          clearTimeout(existingTimeout);
+          activeTimeouts.delete(code.toUpperCase());
+        }
+
         const [updated] = await db
           .update(sessions)
           .set({
@@ -449,6 +578,22 @@ export function createSessionsRoute(db = defaultDb, ws: IWebSocketManager = wsMa
         })
         .where(eq(sessions.code, code.toUpperCase()))
         .returning();
+
+      // Clear any existing timeout for this session
+      const existingTimeout = activeTimeouts.get(code.toUpperCase());
+      if (existingTimeout) {
+        clearTimeout(existingTimeout);
+      }
+
+      // Set up question timeout
+      const timeLimit = (nextQuestion.timeLimit || 30) * 1000; // Convert to milliseconds
+      const timeout = setTimeout(() => {
+        handleQuestionTimeout(code.toUpperCase(), nextQuestion.id, db, ws);
+        activeTimeouts.delete(code.toUpperCase());
+      }, timeLimit);
+      
+      activeTimeouts.set(code.toUpperCase(), timeout);
+      console.log(`Set timeout for session ${code.toUpperCase()}, question ${nextQuestion.id} (${timeLimit}ms)`);
 
       // Broadcast question revealed event
       ws.broadcastToRoom(code.toUpperCase(), {

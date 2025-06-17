@@ -286,4 +286,73 @@ test.describe('Game Flow', () => {
     // Should show error message
     await expect(page.getByText('Invalid game code')).toBeVisible();
   });
+
+  test('player timeout behavior - server handles timeout when player doesnt answer', async ({ browser }) => {
+    test.setTimeout(45000); // Timeout test - allow time for server timeout to occur
+    
+    const hostContext = await browser.newContext();
+    const playerContext = await browser.newContext();
+
+    const hostPage = await hostContext.newPage();
+    const playerPage = await playerContext.newPage();
+
+    try {
+      // Set up game with host and player
+      await hostPage.goto('/');
+      await hostPage.waitForLoadState('networkidle');
+      await hostPage.getByRole('button', { name: 'Create Game' }).click();
+      
+      await hostPage.waitForSelector('[data-testid="question-pack"]', { timeout: 10000 });
+      const firstPack = hostPage.locator('[data-testid="question-pack"]').first();
+      await firstPack.click();
+      await hostPage.getByRole('button', { name: 'Create Game' }).click();
+
+      const gameCode = await hostPage.locator('.text-5xl').textContent();
+      
+      // Player joins
+      await playerPage.goto('/');
+      await playerPage.getByRole('button', { name: 'Join Game' }).click();
+      const codeInput = playerPage.locator('input[placeholder="ABC123"]');
+      await codeInput.waitFor({ state: 'visible' });
+      await codeInput.fill(gameCode!);
+      await playerPage.getByRole('button', { name: 'Join' }).click();
+
+      const nicknameInput = playerPage.getByPlaceholder('Enter nickname');
+      await nicknameInput.waitFor({ state: 'visible' });
+      await nicknameInput.fill('TimeoutTester');
+      await playerPage.getByRole('button', { name: 'Join Game' }).click();
+
+      // Wait for player to appear in host lobby
+      await hostPage.waitForSelector('text=TimeoutTester', { timeout: 10000 });
+      
+      // Host starts the game
+      const startButton = hostPage.getByRole('button', { name: 'Start Game' });
+      await startButton.click();
+
+      // Wait for question to appear on player side
+      await expect(playerPage).toHaveURL(/\/play\/[A-Z0-9]{6}\/game$/, { timeout: 15000 });
+      await expect(playerPage.locator('h2').first()).toBeVisible({ timeout: 10000 });
+
+      // Check that timer is counting down
+      const timerElement = playerPage.locator('p').filter({ hasText: /^\d+s$/ });
+      await expect(timerElement).toBeVisible();
+      
+      // DON'T click any answer - let server timeout handle it
+      // Wait for server-side timeout to complete and show results
+      // (Server should auto-create timeout answers after timeLimit expires)
+      await expect(playerPage.getByText("Time's up!")).toBeVisible({ 
+        timeout: 25000  // Wait up to 25 seconds for server timeout (questions have ~15-20s timeLimit)
+      });
+      
+      // Verify player shows as answered on host side (answered count should show 1/1)
+      await expect(hostPage.getByText(/1\s*\/\s*1/)).toBeVisible({ timeout: 10000 });
+      
+      // Host should be able to reveal answer
+      await expect(hostPage.getByRole('button', { name: 'Reveal Answer' })).toBeEnabled({ timeout: 5000 });
+
+    } finally {
+      await hostContext.close();
+      await playerContext.close();
+    }
+  });
 });

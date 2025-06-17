@@ -87,6 +87,7 @@ export interface QuestionCompletedEvent extends BaseWebSocketEvent {
       isCorrect: boolean;
       timeToAnswer?: number;
     }>;
+    timeoutPlayers?: string[]; // Player IDs who timed out
   };
 }
 

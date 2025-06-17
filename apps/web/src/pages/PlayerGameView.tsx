@@ -65,10 +65,16 @@ export function PlayerGameView() {
         setPointsEarned(playerScore.score - totalScore);
         setTotalScore(playerScore.score);
         setShowResult(true);
+        
+        // Check if this player timed out (server-side timeout)
+        const timedOut = completedEvent.data.timeoutPlayers?.includes(deviceId);
+        if (timedOut && !hasAnswered) {
+          setHasAnswered(true); // Mark as answered due to timeout
+        }
       }
     });
     return unsubscribe;
-  }, [subscribe, deviceId, totalScore]);
+  }, [subscribe, deviceId, totalScore, hasAnswered]);
 
   // Handle game finished
   useEffect(() => {
@@ -111,6 +117,7 @@ export function PlayerGameView() {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
       return () => clearTimeout(timer);
     }
+    // Note: When timeLeft reaches 0, server will handle timeout automatically
   }, [timeLeft, hasAnswered]);
 
   const handleAnswerSelect = async (answerIndex: number) => {
@@ -221,11 +228,13 @@ export function PlayerGameView() {
               <p
                 className={`text-lg font-semibold ${isCorrect ? 'text-green-600' : 'text-red-600'}`}
               >
-                {isCorrect ? 'Correct!' : 'Incorrect'}
+                {isCorrect ? 'Correct!' : !hasAnswered || selectedAnswer === null ? 'Time\'s up!' : 'Incorrect'}
               </p>
               <p className="text-muted-foreground">
                 {isCorrect
                   ? `+${pointsEarned} points`
+                  : !hasAnswered || selectedAnswer === null
+                  ? 'You ran out of time'
                   : 'Better luck next time'}
               </p>
             </div>

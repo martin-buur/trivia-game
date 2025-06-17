@@ -84,7 +84,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **E2E Testing with Playwright**:
   - Complete test setup for game flow scenarios
   - Host and player interaction testing
-  - Game creation, joining, and basic flow verification
+  - Game creation, joining, and complete game flow verification
+  - Server-side timeout behavior testing
+- **Server-Side Timeout System**:
+  - Automatic timeout handling for players who don't respond
+  - Server creates timeout answers (`selectedOptionIndex: -1`) for missing players
+  - Early timeout clearing when all players answer
+  - Robust handling of player disconnections during questions
+  - WebSocket broadcasts for timeout events (`answer_submitted` + `question_completed`)
 
 ### 🚀 Next Steps
 
@@ -224,8 +231,8 @@ The game uses WebSocket connections for real-time updates:
   - `player_left` - When a player leaves the game  
   - `game_started` - When host starts the game
   - `question_revealed` - New question shown
-  - `answer_submitted` - When any player submits an answer
-  - `question_completed` - Question results with scores
+  - `answer_submitted` - When any player submits an answer (including server-side timeouts)
+  - `question_completed` - Question results with scores and timeout players
   - `scores_updated` - Live score updates
   - `game_finished` - Game completed
 - **Message format**: `{ type: 'event_name', sessionCode: string, data: any }`
@@ -240,6 +247,8 @@ The game uses WebSocket connections for real-time updates:
 4. **State Management**: Use Zustand for client state, WebSocket + API for server state
 5. **Responsive Design**: Mobile-first for player views, desktop-optimized for host views
 6. **WebSocket Reconnection**: Implement automatic reconnection with exponential backoff
+7. **Server-Side Timeout**: All question timeouts are handled server-side to prevent issues with player disconnections
+8. **Answer Tracking**: Use `deviceId` (not internal player ID) for all frontend-server communication
 
 ## Testing Approach
 

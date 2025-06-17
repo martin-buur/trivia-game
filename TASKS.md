@@ -91,6 +91,15 @@
 - [x] Connection state management with auto-reconnection
 - [x] Real-time events: player_joined, answer_submitted, question_revealed, scores_updated, game_finished
 
+#### 5. Server-Side Timeout System
+
+- [x] Automatic timeout handling for unresponsive players
+- [x] Server creates timeout answers (selectedOptionIndex: -1) for missing players
+- [x] Early timeout clearing when all players answer
+- [x] Robust handling of player disconnections during questions
+- [x] WebSocket broadcasts for timeout events (answer_submitted + question_completed)
+- [x] Comprehensive vitest and E2E testing for timeout scenarios
+
 ### 🎯 POC Success Criteria ✅ COMPLETED
 
 - [x] Host can create a game with a question pack
@@ -102,7 +111,12 @@
 - [x] Real-time updates work throughout the game flow
 - [x] E2E tests verify the complete game flow
 
-**🎉 The POC is now complete and fully functional!**
+**🎉 The POC is now complete and fully functional with robust timeout handling!**
+
+### 🚨 High Priority Bug Fixes
+
+- [ ] **E2E Tests Error**: Investigate and fix remaining E2E test errors
+- [ ] **Players Answered Count Issue**: Fix incorrect answered count display (especially with existing server data)
 
 ---
 

@@ -41,6 +41,9 @@ importers:
       '@hono/node-server':
         specifier: 1.14.4
         version: 1.14.4(hono@4.7.11)
+      '@hono/node-ws':
+        specifier: ^1.1.7
+        version: 1.1.7(@hono/node-server@1.14.4(hono@4.7.11))(hono@4.7.11)
       '@supabase/supabase-js':
         specifier: 2.50.0
         version: 2.50.0
@@ -65,6 +68,9 @@ importers:
       postgres:
         specifier: 3.4.6
         version: 3.4.6
+      ws:
+        specifier: ^8.18.2
+        version: 8.18.2
       zod:
         specifier: ^3.25.64
         version: 3.25.64
@@ -72,6 +78,9 @@ importers:
       '@types/node':
         specifier: 24.0.2
         version: 24.0.2
+      '@types/ws':
+        specifier: ^8.18.1
+        version: 8.18.1
       '@vitest/ui':
         specifier: ^3.2.3
         version: 3.2.3(vitest@3.2.3)
@@ -890,6 +899,13 @@ packages:
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
+
+  '@hono/node-ws@1.1.7':
+    resolution: {integrity: sha512-O+sJXeruHlAAdSHUoyol8s2kTVqixdGIfKqakyN6z2RKR2O8LDOFr1CpTye7xfwmUsBe6uoXKSLmGvLbCfPFgw==}
+    engines: {node: '>=18.14.1'}
+    peerDependencies:
+      '@hono/node-server': ^1.11.1
+      hono: ^4.6.0
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -3249,6 +3265,15 @@ snapshots:
   '@hono/node-server@1.14.4(hono@4.7.11)':
     dependencies:
       hono: 4.7.11
+
+  '@hono/node-ws@1.1.7(@hono/node-server@1.14.4(hono@4.7.11))(hono@4.7.11)':
+    dependencies:
+      '@hono/node-server': 1.14.4(hono@4.7.11)
+      hono: 4.7.11
+      ws: 8.18.2
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   '@humanfs/core@0.19.1': {}
 

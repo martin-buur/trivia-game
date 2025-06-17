@@ -9,6 +9,16 @@ import {
   answers,
 } from '@trivia/db';
 import { generateSessionCode } from '@trivia/utils';
+import { wsManager } from '../websocket';
+
+// Helper function to get answered count for a question
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getAnsweredCount(questionId: string, db: any): Promise<number> {
+  const answersCount = await db.query.answers.findMany({
+    where: eq(answers.questionId, questionId),
+  });
+  return answersCount.length;
+}
 
 export function createSessionsRoute(db = defaultDb) {
   const sessionsRoute = new Hono();
@@ -185,6 +195,22 @@ export function createSessionsRoute(db = defaultDb) {
         .where(eq(sessions.code, code.toUpperCase()))
         .returning();
 
+      // Broadcast game started event
+      wsManager.broadcastToRoom(code.toUpperCase(), {
+        type: 'game_started',
+        sessionCode: code.toUpperCase(),
+        timestamp: new Date().toISOString(),
+        data: {
+          questionCount: session.questionPack.questions.length,
+          firstQuestion: {
+            id: firstQuestion.id,
+            text: firstQuestion.question,
+            options: firstQuestion.options,
+            timeLimit: firstQuestion.timeLimit || 30
+          }
+        }
+      });
+
       return c.json({
         session: updated,
         question: {
@@ -300,6 +326,20 @@ export function createSessionsRoute(db = defaultDb) {
         .where(eq(players.id, player.id))
         .returning();
 
+      // Broadcast answer submitted event
+      wsManager.broadcastToRoom(code.toUpperCase(), {
+        type: 'answer_submitted',
+        sessionCode: code.toUpperCase(),
+        timestamp: new Date().toISOString(),
+        data: {
+          playerId: player.id,
+          nickname: player.nickname,
+          answeredCount: await getAnsweredCount(session.currentQuestion.id, db),
+          totalPlayers: session.players.length,
+          allAnswered: false // We'll calculate this properly later
+        }
+      });
+
       return c.json({
         correct: isCorrect,
         pointsEarned,
@@ -365,6 +405,34 @@ export function createSessionsRoute(db = defaultDb) {
           .where(eq(sessions.code, code.toUpperCase()))
           .returning();
 
+        // Get final scores for broadcast
+        const finalScores = await db.query.players.findMany({
+          where: eq(players.sessionId, session.id),
+          orderBy: [desc(players.score)]
+        });
+
+        const winner = finalScores[0];
+        
+        // Broadcast game finished event
+        wsManager.broadcastToRoom(code.toUpperCase(), {
+          type: 'game_finished',
+          sessionCode: code.toUpperCase(),
+          timestamp: new Date().toISOString(),
+          data: {
+            finalScores: finalScores.map((player, index) => ({
+              playerId: player.id,
+              nickname: player.nickname,
+              totalScore: player.score,
+              rank: index + 1
+            })),
+            winner: {
+              playerId: winner.id,
+              nickname: winner.nickname,
+              totalScore: winner.score
+            }
+          }
+        });
+
         return c.json({
           hasNext: false,
           session: updated,
@@ -380,6 +448,23 @@ export function createSessionsRoute(db = defaultDb) {
         })
         .where(eq(sessions.code, code.toUpperCase()))
         .returning();
+
+      // Broadcast question revealed event
+      wsManager.broadcastToRoom(code.toUpperCase(), {
+        type: 'question_revealed',
+        sessionCode: code.toUpperCase(),
+        timestamp: new Date().toISOString(),
+        data: {
+          questionNumber: currentIndex + 2,
+          totalQuestions: sortedQuestions.length,
+          question: {
+            id: nextQuestion.id,
+            text: nextQuestion.question,
+            options: nextQuestion.options,
+            timeLimit: nextQuestion.timeLimit || 30
+          }
+        }
+      });
 
       return c.json({
         hasNext: true,

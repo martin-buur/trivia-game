@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { db as defaultDb, sessions, players } from '@trivia/db';
+import { wsManager } from '../websocket';
 
 export function createPlayersRoute(db = defaultDb) {
   const playersRoute = new Hono();
@@ -58,6 +59,17 @@ export function createPlayersRoute(db = defaultDb) {
           deviceId: validated.deviceId,
         })
         .returning();
+
+      // Broadcast player joined event
+      wsManager.broadcastToRoom(session.code, {
+        type: 'player_joined',
+        sessionCode: session.code,
+        timestamp: new Date().toISOString(),
+        data: {
+          player,
+          totalPlayers: session.players.length + 1
+        }
+      });
 
       return c.json({ player }, 201);
     } catch (error) {
@@ -124,8 +136,30 @@ export function createPlayersRoute(db = defaultDb) {
         return c.json({ error: 'Player not found' }, 404);
       }
 
+      // Get session code for WebSocket broadcast
+      const session = await db.query.sessions.findFirst({
+        where: eq(sessions.id, player.sessionId),
+        with: {
+          players: true
+        }
+      });
+
       // Delete player
       await db.delete(players).where(eq(players.id, playerId));
+
+      // Broadcast player left event
+      if (session) {
+        wsManager.broadcastToRoom(session.code, {
+          type: 'player_left',
+          sessionCode: session.code,
+          timestamp: new Date().toISOString(),
+          data: {
+            playerId: player.id,
+            nickname: player.nickname,
+            totalPlayers: session.players.length - 1
+          }
+        });
+      }
 
       return c.json({ success: true }, 200);
     } catch (error) {

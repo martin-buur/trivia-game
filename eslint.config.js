@@ -31,9 +31,12 @@ export default [
         fetch: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
         crypto: 'readonly',
         __dirname: 'readonly',
         __filename: 'readonly',
+        NodeJS: 'readonly',
         Response: 'readonly',
         HTMLButtonElement: 'readonly',
         HTMLDivElement: 'readonly',
@@ -42,6 +45,7 @@ export default [
         Event: 'readonly',
         KeyboardEvent: 'readonly',
         MouseEvent: 'readonly',
+        WebSocket: 'readonly',
       }
     },
     plugins: {

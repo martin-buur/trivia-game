@@ -49,15 +49,15 @@ export async function handleQuestionTimeout(sessionCode: string, questionId: str
       where: eq(answers.questionId, questionId),
     });
 
-    const answeredPlayerIds = new Set(existingAnswers.map(a => a.playerId));
-    const unansweredPlayers = session.players.filter(p => !answeredPlayerIds.has(p.id));
+    const answeredPlayerIds = new Set(existingAnswers.map((a: any) => a.playerId));
+    const unansweredPlayers = session.players.filter((p: any) => !answeredPlayerIds.has(p.id));
 
     // Create timeout answers for players who haven't answered
     if (unansweredPlayers.length > 0) {
       console.log(`Creating timeout answers for ${unansweredPlayers.length} players`);
       
       await db.insert(answers).values(
-        unansweredPlayers.map(player => ({
+        unansweredPlayers.map((player: any) => ({
           playerId: player.id,
           questionId: questionId,
           selectedOptionIndex: -1, // -1 indicates timeout
@@ -73,7 +73,7 @@ export async function handleQuestionTimeout(sessionCode: string, questionId: str
           sessionCode,
           timestamp: new Date().toISOString(),
           data: {
-            playerId: player.deviceId,
+            playerId: player.id,
             nickname: player.nickname,
             answeredCount: await getAnsweredCount(questionId, db),
             totalPlayers: session.players.length,
@@ -87,7 +87,7 @@ export async function handleQuestionTimeout(sessionCode: string, questionId: str
         where: eq(players.sessionId, session.id),
       });
 
-      const scores = updatedPlayers.map(p => ({
+      const scores = updatedPlayers.map((p: any) => ({
         playerId: p.deviceId, // Use deviceId so frontend can find it
         nickname: p.nickname,
         score: p.score,
@@ -102,9 +102,9 @@ export async function handleQuestionTimeout(sessionCode: string, questionId: str
         timestamp: new Date().toISOString(),
         data: {
           questionId,
-          correctAnswer: session.currentQuestion.correctAnswerIndex,
+          correctAnswer: session.currentQuestion.correctAnswerIndex.toString(),
           scores,
-          timeoutPlayers: unansweredPlayers.map(p => p.deviceId)
+          timeoutPlayers: unansweredPlayers.map((p: any) => p.deviceId)
         }
       });
     }
@@ -682,7 +682,13 @@ export function createSessionsRoute(db = defaultDb, ws: IWebSocketManager = wsMa
         },
       });
 
-      const answeredPlayerIds = new Set(answeredPlayers.map(a => a.playerId));
+      // Filter to only include answers from players in this session
+      const sessionPlayerIds = new Set(session.players.map(p => p.id));
+      const sessionAnsweredPlayers = answeredPlayers.filter(a => 
+        sessionPlayerIds.has(a.playerId)
+      );
+
+      const answeredPlayerIds = new Set(sessionAnsweredPlayers.map(a => a.playerId));
       const unansweredPlayers = session.players.filter(
         p => !answeredPlayerIds.has(p.id)
       );
@@ -693,8 +699,8 @@ export function createSessionsRoute(db = defaultDb, ws: IWebSocketManager = wsMa
           order: 1, // TODO: Add currentQuestionOrder to schema if needed
         },
         totalPlayers: session.players.length,
-        answeredCount: answeredPlayers.length,
-        answeredPlayers: answeredPlayers.map(a => ({
+        answeredCount: sessionAnsweredPlayers.length,
+        answeredPlayers: sessionAnsweredPlayers.map(a => ({
           id: a.player.id,
           nickname: a.player.nickname,
           answeredAt: a.answeredAt,

@@ -24,7 +24,7 @@ class WebSocketManager implements IWebSocketManager {
 
   initialize(server: unknown) {
     this.wss = new WebSocketServer({ 
-      server,
+      server: server as any,
       path: '/ws',
       verifyClient: (_info: unknown) => {
         // Basic validation - could add more security here
@@ -46,7 +46,7 @@ class WebSocketManager implements IWebSocketManager {
 
       ws.on('message', (data: unknown) => {
         try {
-          const message = JSON.parse(data.toString());
+          const message = JSON.parse((data as any).toString());
           this.handleClientMessage(clientId, ws, message);
         } catch (error) {
           console.error('Failed to parse WebSocket message:', error);

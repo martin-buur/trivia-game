@@ -338,14 +338,25 @@ test.describe('Game Flow', () => {
       await expect(timerElement).toBeVisible();
       
       // DON'T click any answer - let server timeout handle it
+      // Check what the answered count shows
+      const answeredCountElement = hostPage.locator('div:has(> p:has-text("Players answered")) p.text-2xl');
+      await expect(answeredCountElement).toBeVisible({ timeout: 5000 });
+      const initialCount = await answeredCountElement.textContent();
+      console.log('Initial answered count:', initialCount);
+      
+      // It should show "0 / 1" initially since the player hasn't answered
+      expect(initialCount).toContain('0');
+      expect(initialCount).toContain('1');
+      
       // Wait for server-side timeout to complete and show results
       // (Server should auto-create timeout answers after timeLimit expires)
       await expect(playerPage.getByText("Time's up!")).toBeVisible({ 
         timeout: 25000  // Wait up to 25 seconds for server timeout (questions have ~15-20s timeLimit)
       });
       
-      // Verify player shows as answered on host side (answered count should show 1/1)
-      await expect(hostPage.getByText(/1\s*\/\s*1/)).toBeVisible({ timeout: 10000 });
+      // After timeout, the server will have created a timeout answer
+      // The host should now show 1/1 as the timeout answer is counted
+      await expect(answeredCountElement).toHaveText('1 / 1', { timeout: 10000 });
       
       // Host should be able to reveal answer
       await expect(hostPage.getByRole('button', { name: 'Reveal Answer' })).toBeEnabled({ timeout: 5000 });

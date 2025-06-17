@@ -7,9 +7,18 @@ test.describe('Auto-reveal feature', () => {
     await hostPage.goto('/');
     await hostPage.getByRole('button', { name: 'Create Game' }).click();
     await hostPage.waitForSelector('[data-testid="question-pack"]', { timeout: 10000 });
-    await hostPage.locator('[data-testid="question-pack"]').first().click();
     
-    const gameCode = await hostPage.locator('h1').textContent();
+    // Use the E2E Test Pack with 3-second timeouts
+    const testPack = hostPage.locator('[data-testid="question-pack"]:has-text("E2E Test Pack")');
+    await testPack.click();
+    
+    await hostPage.getByRole('button', { name: 'Create Game' }).click();
+    
+    // Wait for navigation to host lobby
+    await hostPage.waitForURL(/\/host\/[A-Z0-9]{6}$/);
+    
+    // Get game code from the large text display
+    const gameCode = await hostPage.locator('.text-5xl').textContent();
     expect(gameCode).toMatch(/^[A-Z0-9]{6}$/);
     return gameCode!;
   }
@@ -17,19 +26,19 @@ test.describe('Auto-reveal feature', () => {
   async function joinGame(playerPage: Page, gameCode: string, nickname: string) {
     await playerPage.goto('/');
     await playerPage.getByRole('button', { name: 'Join Game' }).click();
-    await playerPage.getByPlaceholder('Game Code').fill(gameCode);
-    await playerPage.getByRole('button', { name: 'Next' }).click();
+    await playerPage.getByPlaceholder('ABC123').fill(gameCode);
+    await playerPage.getByRole('button', { name: 'Join' }).click();
     
     await playerPage.waitForSelector('input[placeholder*="nickname"]', { timeout: 10000 });
     await playerPage.getByPlaceholder(/nickname/i).fill(nickname);
     await playerPage.getByRole('button', { name: 'Join Game' }).click();
     
     await expect(playerPage).toHaveURL(/\/play\/[A-Z0-9]{6}$/);
-    await expect(playerPage.getByText(nickname)).toBeVisible();
+    await expect(playerPage.getByRole('heading', { name: nickname })).toBeVisible();
   }
 
   test('should auto-reveal answer when timeout occurs', async ({ browser }) => {
-    test.setTimeout(60000);
+    test.setTimeout(20000); // Reduced timeout since questions are only 3 seconds
     
     const hostContext = await browser.newContext();
     const playerContext = await browser.newContext();
@@ -54,10 +63,10 @@ test.describe('Auto-reveal feature', () => {
       await expect(playerPage.locator('h2').first()).toBeVisible({ timeout: 10000 });
       
       // DO NOT answer - wait for timeout
-      // Assuming 30 second timeout, wait for auto-reveal
+      // 3 second timeout for E2E Test Pack
       
       // Check that answer was revealed automatically on host
-      await expect(hostPage.getByText('Answer revealed automatically')).toBeVisible({ timeout: 35000 });
+      await expect(hostPage.getByText('Answer revealed automatically')).toBeVisible({ timeout: 5000 });
       await expect(hostPage.locator('.border-green-500')).toBeVisible();
       
       // Player should see the correct answer
@@ -71,7 +80,7 @@ test.describe('Auto-reveal feature', () => {
   });
 
   test('should auto-reveal answer when all players answer and 5 seconds pass', async ({ browser }) => {
-    test.setTimeout(30000);
+    test.setTimeout(20000); // Reduced timeout
     
     const hostContext = await browser.newContext();
     const playerContext = await browser.newContext();
@@ -108,8 +117,8 @@ test.describe('Auto-reveal feature', () => {
       await expect(hostPage.getByText('Answer revealed automatically')).toBeVisible();
       await expect(hostPage.locator('.border-green-500')).toBeVisible();
       
-      // Player should see the correct answer
-      await expect(playerPage.locator('.bg-green-100, .bg-green-900, .bg-red-100, .bg-red-900')).toBeVisible();
+      // Player should see the correct answer highlighted
+      await expect(playerPage.locator('button.bg-green-100, button.bg-green-900')).toBeVisible();
       
     } finally {
       await hostContext.close();
@@ -118,7 +127,7 @@ test.describe('Auto-reveal feature', () => {
   });
 
   test('should allow manual reveal before auto-reveal', async ({ browser }) => {
-    test.setTimeout(30000);
+    test.setTimeout(20000); // Reduced timeout
     
     const hostContext = await browser.newContext();
     const playerContext = await browser.newContext();

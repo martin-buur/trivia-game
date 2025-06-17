@@ -92,6 +92,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - Early timeout clearing when all players answer
   - Robust handling of player disconnections during questions
   - WebSocket broadcasts for timeout events (`answer_submitted` + `question_completed`)
+- **Auto-Reveal Answer Feature**:
+  - Automatic answer reveal when timer expires
+  - `isAutoReveal` flag in WebSocket events to distinguish manual vs automatic reveals
+  - Seamless transition from question to answer display
+  - All E2E tests passing with proper auto-reveal behavior
 
 ### 🚀 Next Steps
 

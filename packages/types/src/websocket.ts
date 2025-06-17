@@ -81,6 +81,7 @@ export interface AnswerRevealedEvent extends BaseWebSocketEvent {
   data: {
     questionId: string;
     correctAnswerIndex: number;
+    isAutoReveal?: boolean;
     playerResults: Array<{
       playerId: string;
       nickname: string;

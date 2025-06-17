@@ -75,14 +75,12 @@ export function HostGameView() {
           correctAnswerIndex: revealedEvent.data.correctAnswerIndex
         });
         setShowingAnswer(true);
-        // If we didn't manually reveal, it was auto-revealed
-        if (!showingAnswer) {
-          setAutoRevealed(true);
-        }
+        // Use the isAutoReveal flag from the event
+        setAutoRevealed(revealedEvent.data.isAutoReveal || false);
       }
     });
     return unsubscribe;
-  }, [subscribe, currentQuestion, showingAnswer]);
+  }, [subscribe, currentQuestion]);
 
   // Load initial game state
   useEffect(() => {

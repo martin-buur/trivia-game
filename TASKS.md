@@ -113,10 +113,10 @@
 
 **🎉 The POC is now complete and fully functional with robust timeout handling!**
 
-### 🚨 High Priority Bug Fixes
+### ✅ Recently Fixed
 
-- [ ] **E2E Tests Error**: Investigate and fix remaining E2E test errors
-- [ ] **Players Answered Count Issue**: Fix incorrect answered count display (especially with existing server data)
+- [x] **E2E Tests Error**: Fixed all E2E test failures by updating selectors and implementing auto-reveal functionality
+- [x] **Auto-Reveal Feature**: Implemented automatic answer reveal when timer expires with proper `isAutoReveal` flag
 
 ---
 

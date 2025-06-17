@@ -345,13 +345,16 @@ test.describe('Game Flow', () => {
       
       // DON'T click any answer - let server timeout handle it
       // Check what the answered count shows
-      const answeredCountElement = hostPage.locator('div:has(> p:has-text("Players answered")) p.text-2xl');
+      const answeredCountElement = hostPage.locator('p.text-2xl');
       await expect(answeredCountElement).toBeVisible({ timeout: 5000 });
+      
+      // Wait for the player count to update (WebSocket might take a moment)
+      await expect(answeredCountElement).toHaveText(/^\d+ \/ \d+$/, { timeout: 5000 });
+      
       const initialCount = await answeredCountElement.textContent();
       
       // It should show "0 / 1" initially since the player hasn't answered
-      expect(initialCount).toContain('0');
-      expect(initialCount).toContain('1');
+      expect(initialCount).toMatch(/^0 \/ 1$/);
       
       // Verify WebSocket is connected on both pages
       const hostConnectionStatus = hostPage.locator('.w-2.h-2.rounded-full.bg-green-500');
@@ -375,8 +378,12 @@ test.describe('Game Flow', () => {
       // The host should now show 1/1 as the timeout answer is counted
       await expect(answeredCountElement).toHaveText('1 / 1', { timeout: 3000 });
       
-      // Host should be able to reveal answer
-      await expect(hostPage.getByRole('button', { name: 'Reveal Answer' })).toBeEnabled({ timeout: 2000 });
+      // Since timeout auto-reveals the answer, the host should see the answer revealed
+      // Look for the correct answer indicator (green border)
+      await expect(hostPage.locator('.border-green-500')).toBeVisible({ timeout: 3000 });
+      
+      // And should be able to go to next question or end game
+      await expect(hostPage.getByRole('button', { name: /Next Question|End Game/ })).toBeEnabled({ timeout: 2000 });
 
     } finally {
       await hostContext.close();

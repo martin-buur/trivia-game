@@ -27,8 +27,8 @@ async function getAnsweredCount(questionId: string, db: any): Promise<number> {
 
 // Helper function to reveal answer and complete question
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function revealAndCompleteQuestion(sessionCode: string, questionId: string, db: any, ws: IWebSocketManager, timeoutPlayerDeviceIds: string[] = []) {
-  console.log(`Revealing answer for question ${questionId} in session ${sessionCode} (timeout players: ${timeoutPlayerDeviceIds.length})`);
+async function revealAndCompleteQuestion(sessionCode: string, questionId: string, db: any, ws: IWebSocketManager, timeoutPlayerDeviceIds: string[] = [], isAutoReveal: boolean = true) {
+  console.log(`Revealing answer for question ${questionId} in session ${sessionCode} (timeout players: ${timeoutPlayerDeviceIds.length}, auto: ${isAutoReveal})`);
   
   try {
     // Get session with current question and players
@@ -82,6 +82,7 @@ async function revealAndCompleteQuestion(sessionCode: string, questionId: string
       data: {
         questionId: session.currentQuestion.id,
         correctAnswerIndex: session.currentQuestion.correctAnswerIndex,
+        isAutoReveal,
         playerResults: playersWithAnswers.map((p: any) => ({
           playerId: p.playerId,
           nickname: p.nickname,
@@ -610,52 +611,16 @@ export function createSessionsRoute(db = defaultDb, ws: IWebSocketManager = wsMa
         return c.json({ error: 'No active question' }, 400);
       }
 
-      // Get current scores and answer status
-      const playersWithAnswers = await db
-        .select({
-          playerId: players.id,
-          nickname: players.nickname,
-          totalScore: players.score,
-          hasAnswered: sql<boolean>`EXISTS (
-            SELECT 1 FROM ${answers} 
-            WHERE ${answers.playerId} = ${players.id} 
-            AND ${answers.questionId} = ${session.currentQuestionId}
-          )`,
-          isCorrect: sql<boolean>`EXISTS (
-            SELECT 1 FROM ${answers} 
-            WHERE ${answers.playerId} = ${players.id} 
-            AND ${answers.questionId} = ${session.currentQuestionId}
-            AND ${answers.isCorrect} = 1
-          )`,
-          selectedOption: sql<number>`(
-            SELECT ${answers.selectedOptionIndex} 
-            FROM ${answers} 
-            WHERE ${answers.playerId} = ${players.id} 
-            AND ${answers.questionId} = ${session.currentQuestionId}
-          )`
-        })
-        .from(players)
-        .where(eq(players.sessionId, session.id))
-        .orderBy(desc(players.score));
+      // Clear any existing auto-reveal timeout since host is manually revealing
+      const existingTimeout = activeTimeouts.get(code.toUpperCase());
+      if (existingTimeout) {
+        clearTimeout(existingTimeout);
+        activeTimeouts.delete(code.toUpperCase());
+        console.log(`Cleared auto-reveal timeout for session ${code.toUpperCase()} due to manual reveal`);
+      }
 
-      // Broadcast answer revealed event
-      ws.broadcastToRoom(code.toUpperCase(), {
-        type: 'answer_revealed',
-        sessionCode: code.toUpperCase(),
-        timestamp: new Date().toISOString(),
-        data: {
-          questionId: session.currentQuestion.id,
-          correctAnswerIndex: session.currentQuestion.correctAnswerIndex,
-          playerResults: playersWithAnswers.map((p: any) => ({
-            playerId: p.playerId,
-            nickname: p.nickname,
-            hasAnswered: p.hasAnswered,
-            isCorrect: p.isCorrect,
-            selectedOption: p.selectedOption,
-            totalScore: p.totalScore
-          }))
-        }
-      });
+      // Use the common reveal function with isAutoReveal = false
+      await revealAndCompleteQuestion(code.toUpperCase(), session.currentQuestion.id, db, ws, [], false);
 
       return c.json({ 
         success: true,

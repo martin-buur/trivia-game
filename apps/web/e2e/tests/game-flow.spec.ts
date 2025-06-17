@@ -287,11 +287,8 @@ test.describe('Game Flow', () => {
     await expect(page.getByText('Invalid game code')).toBeVisible();
   });
 
-  test.skip('player timeout behavior - server handles timeout when player doesnt answer', async ({ browser }) => {
-    // SKIPPED: This test is flaky due to WebSocket room disconnection issues during E2E tests
-    // The server-side timeout logic works correctly in production but the test environment
-    // causes WebSocket disconnections that prevent the timeout events from being received
-    test.setTimeout(15000); // Should only need 3s timeout + some buffer
+  test('player timeout behavior - server handles timeout when player doesnt answer', async ({ browser }) => {
+    test.setTimeout(15000); // 3s timeout + buffer for setup and processing
     
     const hostContext = await browser.newContext();
     const playerContext = await browser.newContext();
@@ -354,18 +351,27 @@ test.describe('Game Flow', () => {
       expect(initialCount).toContain('0');
       expect(initialCount).toContain('1');
       
-      // Wait for timer to reach 0
-      await expect(timerElement).toHaveText('0s', { timeout: 5000 });
+      // Verify WebSocket is connected on both pages
+      const hostConnectionStatus = hostPage.locator('.w-2.h-2.rounded-full.bg-green-500');
+      const playerConnectionStatus = playerPage.locator('.w-2.h-2.rounded-full.bg-green-500');
       
-      // The server should process the timeout and send question_completed event within 1 second
-      // This will trigger the "You ran out of time" message
-      await expect(playerPage.getByText("You ran out of time")).toBeVisible({ 
-        timeout: 3000  // Should appear quickly after timer hits 0
-      });
+      await expect(hostConnectionStatus).toBeVisible({ timeout: 3000 });
+      await expect(playerConnectionStatus).toBeVisible({ timeout: 3000 });
+      
+      // Wait for timer to reach 1s or 0s (timeout happens at ~1s remaining)
+      await expect(timerElement).toHaveText(/^[01]s$/, { timeout: 5000 });
+      
+      // Wait for the result message to appear (timeout should fire soon)
+      const resultDiv = playerPage.locator('.mt-6.text-center').first();
+      await expect(resultDiv).toBeVisible({ timeout: 5000 });
+      
+      // Check that it shows the timeout message
+      const timeoutMessage = playerPage.locator('p').filter({ hasText: 'You ran out of time' });
+      await expect(timeoutMessage).toBeVisible({ timeout: 2000 });
       
       // After timeout, the server will have created a timeout answer
       // The host should now show 1/1 as the timeout answer is counted
-      await expect(answeredCountElement).toHaveText('1 / 1', { timeout: 2000 });
+      await expect(answeredCountElement).toHaveText('1 / 1', { timeout: 3000 });
       
       // Host should be able to reveal answer
       await expect(hostPage.getByRole('button', { name: 'Reveal Answer' })).toBeEnabled({ timeout: 2000 });

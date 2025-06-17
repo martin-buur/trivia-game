@@ -303,8 +303,9 @@ test.describe('Game Flow', () => {
       await hostPage.getByRole('button', { name: 'Create Game' }).click();
       
       await hostPage.waitForSelector('[data-testid="question-pack"]', { timeout: 10000 });
-      const firstPack = hostPage.locator('[data-testid="question-pack"]').first();
-      await firstPack.click();
+      // Use the Quick Test Pack with 3-second timeouts
+      const quickTestPack = hostPage.locator('[data-testid="question-pack"]:has-text("Quick Test Pack")');
+      await quickTestPack.click();
       await hostPage.getByRole('button', { name: 'Create Game' }).click();
 
       const gameCode = await hostPage.locator('.text-5xl').textContent();
@@ -329,6 +330,9 @@ test.describe('Game Flow', () => {
       const startButton = hostPage.getByRole('button', { name: 'Start Game' });
       await startButton.click();
 
+      // Wait for the host to see the game view (question)
+      await expect(hostPage).toHaveURL(/\/host\/[A-Z0-9]{6}\/game$/, { timeout: 15000 });
+      
       // Wait for question to appear on player side
       await expect(playerPage).toHaveURL(/\/play\/[A-Z0-9]{6}\/game$/, { timeout: 15000 });
       await expect(playerPage.locator('h2').first()).toBeVisible({ timeout: 10000 });
@@ -349,9 +353,9 @@ test.describe('Game Flow', () => {
       expect(initialCount).toContain('1');
       
       // Wait for server-side timeout to complete and show results
-      // (Server should auto-create timeout answers after timeLimit expires)
+      // Quick Test Pack has 3-second timeouts
       await expect(playerPage.getByText("Time's up!")).toBeVisible({ 
-        timeout: 25000  // Wait up to 25 seconds for server timeout (questions have ~15-20s timeLimit)
+        timeout: 8000  // 3s timeout + 5s buffer for processing
       });
       
       // After timeout, the server will have created a timeout answer

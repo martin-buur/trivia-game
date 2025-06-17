@@ -13,9 +13,16 @@ async function seed() {
     await db.delete(questionPacks);
 
     // Insert question packs
-    const [generalKnowledge, popCulture, science, history, sports] = await db
+    const [quickTest, generalKnowledge, popCulture, science, history, sports] = await db
       .insert(questionPacks)
       .values([
+        {
+          name: 'Quick Test Pack',
+          description: 'Fast questions for testing (3 second timeouts)',
+          difficulty: 'easy',
+          category: 'test',
+          questionCount: 5,
+        },
         {
           name: 'General Knowledge',
           description: 'A mix of questions from various topics',
@@ -56,6 +63,52 @@ async function seed() {
 
     // Insert questions for each pack
     const questionsData = [
+      // Quick Test Pack (3 second timeouts)
+      {
+        packId: quickTest.id,
+        question: 'What is 2 + 2?',
+        options: ['3', '4', '5', '6'],
+        correctAnswerIndex: 1,
+        timeLimit: 3,
+        points: 100,
+        order: 1,
+      },
+      {
+        packId: quickTest.id,
+        question: 'What color is the sky?',
+        options: ['Red', 'Green', 'Blue', 'Yellow'],
+        correctAnswerIndex: 2,
+        timeLimit: 3,
+        points: 100,
+        order: 2,
+      },
+      {
+        packId: quickTest.id,
+        question: 'How many days in a week?',
+        options: ['5', '6', '7', '8'],
+        correctAnswerIndex: 2,
+        timeLimit: 3,
+        points: 100,
+        order: 3,
+      },
+      {
+        packId: quickTest.id,
+        question: 'Which animal says "meow"?',
+        options: ['Dog', 'Cat', 'Cow', 'Bird'],
+        correctAnswerIndex: 1,
+        timeLimit: 3,
+        points: 100,
+        order: 4,
+      },
+      {
+        packId: quickTest.id,
+        question: 'What shape has 4 equal sides?',
+        options: ['Triangle', 'Circle', 'Square', 'Pentagon'],
+        correctAnswerIndex: 2,
+        timeLimit: 3,
+        points: 100,
+        order: 5,
+      },
       // General Knowledge
       {
         packId: generalKnowledge.id,

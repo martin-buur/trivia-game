@@ -32,8 +32,9 @@ export function PlayerWaitingRoom() {
 
         // If game has started, redirect to game view
         if (sessionData.status === 'playing') {
-          // TODO: Navigate to actual game view when implemented
-          console.log('Game started!');
+          navigate(`/play/${sessionCode}/game`);
+        } else if (sessionData.status === 'finished') {
+          navigate(`/play/${sessionCode}/results`);
         }
       } catch (err) {
         console.error('Failed to fetch session:', err);

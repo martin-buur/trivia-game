@@ -52,7 +52,7 @@ export const api = {
 
     updateStatus: async (
       code: string,
-      status: 'waiting' | 'active' | 'completed',
+      status: 'waiting' | 'playing' | 'finished',
       hostDeviceId: string
     ): Promise<Session> => {
       const response = await fetch(`${API_BASE_URL}/sessions/${code}/status`, {
@@ -60,7 +60,20 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, hostDeviceId }),
       });
-      return handleResponse<Session>(response);
+      const result = await handleResponse<{ session: Session }>(response);
+      return result.session;
+    },
+
+    start: async (
+      code: string,
+      hostDeviceId: string
+    ): Promise<{ session: Session; question: Question }> => {
+      const response = await fetch(`${API_BASE_URL}/sessions/${code}/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hostDeviceId }),
+      });
+      return handleResponse<{ session: Session; question: Question }>(response);
     },
   },
 
@@ -116,18 +129,28 @@ export const api = {
 
   // Game flow endpoints
   game: {
-    getCurrentQuestion: async (sessionCode: string): Promise<Question> => {
-      const response = await fetch(
+    getCurrentQuestion: async (
+      sessionCode: string,
+      includeAnswer = false
+    ): Promise<Question> => {
+      const url = new window.URL(
         `${API_BASE_URL}/sessions/${sessionCode}/current-question`
       );
-      return handleResponse<Question>(response);
+      if (includeAnswer) url.searchParams.set('includeAnswer', 'true');
+      const response = await fetch(url);
+      const result = await handleResponse<{ question: Question }>(response);
+      return result.question;
     },
 
     submitAnswer: async (
       sessionCode: string,
       deviceId: string,
       answerIndex: number
-    ): Promise<{ correct: boolean; score: number }> => {
+    ): Promise<{
+      correct: boolean;
+      pointsEarned: number;
+      totalScore: number;
+    }> => {
       const response = await fetch(
         `${API_BASE_URL}/sessions/${sessionCode}/answers`,
         {
@@ -136,13 +159,21 @@ export const api = {
           body: JSON.stringify({ deviceId, answerIndex }),
         }
       );
-      return handleResponse<{ correct: boolean; score: number }>(response);
+      return handleResponse<{
+        correct: boolean;
+        pointsEarned: number;
+        totalScore: number;
+      }>(response);
     },
 
     nextQuestion: async (
       sessionCode: string,
       hostDeviceId: string
-    ): Promise<{ hasNext: boolean; question?: Question }> => {
+    ): Promise<{
+      hasNext: boolean;
+      question?: Question;
+      session?: Session;
+    }> => {
       const response = await fetch(
         `${API_BASE_URL}/sessions/${sessionCode}/next-question`,
         {
@@ -151,16 +182,22 @@ export const api = {
           body: JSON.stringify({ hostDeviceId }),
         }
       );
-      return handleResponse<{ hasNext: boolean; question?: Question }>(
-        response
-      );
+      return handleResponse<{
+        hasNext: boolean;
+        question?: Question;
+        session?: Session;
+      }>(response);
     },
 
-    getScores: async (sessionCode: string): Promise<Player[]> => {
+    getScores: async (
+      sessionCode: string
+    ): Promise<{ players: Player[]; gameStatus: string }> => {
       const response = await fetch(
         `${API_BASE_URL}/sessions/${sessionCode}/scores`
       );
-      return handleResponse<Player[]>(response);
+      return handleResponse<{ players: Player[]; gameStatus: string }>(
+        response
+      );
     },
   },
 };

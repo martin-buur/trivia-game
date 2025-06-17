@@ -61,14 +61,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - Real-time player list updates (polling every 2 seconds)
   - Error handling for invalid codes and game states
   - Fully responsive design for mobile and desktop
+- **Game Flow API implemented**:
+  - POST /sessions/:code/start - Start game and set first question
+  - GET /sessions/:code/current-question - Get current question (with optional answer)
+  - POST /sessions/:code/answers - Submit player answer with scoring
+  - POST /sessions/:code/next-question - Move to next question (host only)
+  - GET /sessions/:code/scores - Get player scores and rankings
+  - Proper game state management and transitions
+- **API Testing**:
+  - Comprehensive vitest test suite for all API endpoints
+  - Test database setup with PGlite for isolated testing
+  - Sessions API tests covering all game flow scenarios
+  - Players API tests for join/update/leave operations
+  - Proper test data cleanup and foreign key handling
 
 ### 🚀 Next Steps
 
-1. **Game Flow API**: Questions, answers, scoring endpoints
-2. **Host Game Controls**: Start game, advance questions functionality
-3. **Player Game View**: Display questions and answer selection
-4. **Real-time Integration**: Set up WebSocket connections with @hono/node-ws to replace polling
-5. **State Management**: Implement Zustand stores for game state
+1. **Host Game Controls**: Implement Start Game button functionality and question advancement UI
+2. **Player Game View**: Display questions, answer options, and submission UI
+3. **Real-time Updates**: Implement game state updates when host starts game or advances questions
+4. **Score Display**: Show live scores after each question and final results
+5. **WebSocket Integration**: Replace polling with @hono/node-ws for real-time updates
+6. **State Management**: Implement Zustand stores for game state
+7. **Error Recovery**: Handle disconnections and reconnections gracefully
 
 ## Project Overview
 
@@ -114,8 +129,12 @@ pnpm lint          # Run ESLint across the monorepo
 pnpm format        # Format code with Prettier
 
 # Testing
-pnpm test
-pnpm test:watch
+pnpm test          # Run all tests
+pnpm test:watch    # Run tests in watch mode
+
+# API-specific testing (from apps/api directory)
+pnpm test:run      # Run tests once
+pnpm test:ui       # Run tests with Vitest UI
 
 # API Testing (with dev server running)
 curl http://localhost:3001/                    # Health check

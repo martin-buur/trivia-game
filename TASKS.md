@@ -25,7 +25,7 @@
   - [x] Fully responsive homepage with Create/Join options
   - [x] Mobile-first responsive design system
 
-### 🚧 In Progress - Core Game Flow
+### ✅ Recently Completed
 
 #### 1. Homepage & Game Creation
 
@@ -42,19 +42,46 @@
 #### 2. Basic Game Views
 
 - [x] Host lobby (show code, players, start button)
-- [x] Player waiting room
-- [ ] Simple question display (no timer yet)
-- [ ] Answer selection for players
-- [ ] Basic score display
+- [x] Player waiting room with player list
+- [x] Real-time player updates (polling)
 
-#### 3. Game State Management
+#### 3. Game Flow API
 
-- [ ] Question/Answer flow endpoints
-  - [ ] GET /sessions/:code/current-question
-  - [ ] POST /players/:id/answer
-  - [ ] GET /sessions/:code/scores
-- [ ] Move to next question (host control)
-- [ ] End game and show final scores
+- [x] Question/Answer flow endpoints
+  - [x] POST /sessions/:code/start - Start game with first question
+  - [x] GET /sessions/:code/current-question - Get current question
+  - [x] POST /sessions/:code/answers - Submit answer with scoring
+  - [x] POST /sessions/:code/next-question - Advance to next question
+  - [x] GET /sessions/:code/scores - Get player scores
+- [x] Game state transitions (waiting → playing → finished)
+- [x] Score calculation and tracking
+- [x] Comprehensive API testing with vitest
+
+### 🚧 In Progress - Game UI Implementation
+
+#### 1. Host Game Controls
+
+- [ ] Start Game button functionality
+- [ ] Display current question to host
+- [ ] Show answer statistics in real-time
+- [ ] Next Question button
+- [ ] End Game button
+- [ ] Player score tracking display
+
+#### 2. Player Game Experience
+
+- [ ] Question display screen
+- [ ] Answer selection UI
+- [ ] Submit answer functionality
+- [ ] Waiting for next question screen
+- [ ] Real-time score updates
+
+#### 3. Game Over View
+
+- [ ] Final rankings display
+- [ ] Individual score breakdown
+- [ ] Play again option
+- [ ] Return to home
 
 ### 🎯 POC Success Criteria
 

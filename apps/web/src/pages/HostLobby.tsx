@@ -50,7 +50,7 @@ export function HostLobby() {
 
     try {
       const deviceId = getDeviceId();
-      await api.sessions.updateStatus(session.code, 'active', deviceId);
+      await api.sessions.start(session.code, deviceId);
       // Navigate to game view
       navigate(`/host/${session.code}/game`);
     } catch (err) {

@@ -1,7 +1,8 @@
 import { Hono } from 'hono';
-import { db, questionPacks } from '@trivia/db';
+import { db as defaultDb, questionPacks } from '@trivia/db';
 
-const questionPacksRoute = new Hono();
+export function createQuestionPacksRoute(db = defaultDb) {
+  const questionPacksRoute = new Hono();
 
 // Get all question packs
 questionPacksRoute.get('/', async (c) => {
@@ -14,4 +15,7 @@ questionPacksRoute.get('/', async (c) => {
   }
 });
 
-export default questionPacksRoute;
+  return questionPacksRoute;
+}
+
+export default createQuestionPacksRoute();

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { api, useApi } from '@/lib/api';
 import { getDeviceId } from '@trivia/utils';
 import { useGameSocket } from '@/hooks/useGameSocket';
-import type { Question, Player, AnswerSubmittedEvent, ScoresUpdatedEvent, AnswerRevealedEvent } from '@trivia/types';
+import type { Question, Player, AnswerSubmittedEvent, ScoresUpdatedEvent, AnswerRevealedEvent, QuestionRevealedEvent, GameFinishedEvent } from '@trivia/types';
 
 export function HostGameView() {
   const { code } = useParams<{ code: string }>();
@@ -81,6 +81,45 @@ export function HostGameView() {
     });
     return unsubscribe;
   }, [subscribe, currentQuestion]);
+
+  // Handle question revealed events (for auto-progression)
+  useEffect(() => {
+    const unsubscribe = subscribe('question_revealed', (event) => {
+      const questionEvent = event as QuestionRevealedEvent;
+      console.log('Question revealed:', questionEvent);
+      
+      // Update question state
+      setCurrentQuestion({
+        id: questionEvent.data.question.id,
+        question: questionEvent.data.question.text,
+        options: questionEvent.data.question.options,
+        timeLimit: questionEvent.data.question.timeLimit,
+        // Don't include correct answer for unrevealed questions
+        correctAnswerIndex: undefined,
+        packId: '',
+        points: 0,
+        order: questionEvent.data.questionNumber
+      });
+      setQuestionNumber(questionEvent.data.questionNumber);
+      setTotalQuestions(questionEvent.data.totalQuestions);
+      setShowingAnswer(false);
+      setAutoRevealed(false);
+      setAnsweredPlayers(new Set());
+    });
+    return unsubscribe;
+  }, [subscribe]);
+
+  // Handle game finished events
+  useEffect(() => {
+    const unsubscribe = subscribe('game_finished', (event) => {
+      const finishedEvent = event as GameFinishedEvent;
+      console.log('Game finished:', finishedEvent);
+      
+      // Navigate to results page
+      navigate(`/host/${code}/results`);
+    });
+    return unsubscribe;
+  }, [subscribe, navigate, code]);
 
   // Load initial game state
   useEffect(() => {

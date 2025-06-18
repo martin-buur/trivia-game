@@ -131,6 +131,137 @@ async function revealAndCompleteQuestion(sessionCode: string, questionId: string
   }
 }
 
+// Helper function to auto-progress to next question
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function autoProgressToNextQuestion(sessionCode: string, db: any, ws: IWebSocketManager) {
+  try {
+    // Get session with question pack
+    const session = await db.query.sessions.findFirst({
+      where: eq(sessions.code, sessionCode),
+      with: {
+        questionPack: {
+          with: {
+            questions: true,
+          },
+        },
+        players: true,
+      },
+    });
+
+    if (!session || session.status !== 'playing') {
+      console.log('Session not found or not playing, skipping auto-progress');
+      return;
+    }
+
+    // Get all questions sorted by order
+    const sortedQuestions = session.questionPack.questions.sort(
+      (a: any, b: any) => a.order - b.order
+    );
+
+    // Find current question index
+    const currentIndex = sortedQuestions.findIndex(
+      (q: any) => q.id === session.currentQuestionId
+    );
+
+    if (currentIndex === -1) {
+      console.log('Current question not found');
+      return;
+    }
+
+    // Check if there's a next question
+    const nextQuestion = sortedQuestions[currentIndex + 1];
+
+    if (!nextQuestion) {
+      // No more questions - end the game
+      console.log('No more questions, ending game');
+      
+      // Update session status
+      await db
+        .update(sessions)
+        .set({
+          status: 'finished',
+          updatedAt: new Date(),
+        })
+        .where(eq(sessions.code, sessionCode))
+        .returning();
+
+      // Get final scores with ranks
+      const sortedPlayers = session.players.sort((a: any, b: any) => b.score - a.score);
+      const finalScores = sortedPlayers.map((p: any, index: number) => ({
+        playerId: p.deviceId,
+        nickname: p.nickname,
+        totalScore: p.score,
+        rank: index + 1,
+      }));
+
+      // Broadcast game finished
+      ws.broadcastToRoom(sessionCode, {
+        type: 'game_finished',
+        sessionCode,
+        timestamp: new Date().toISOString(),
+        data: {
+          finalScores,
+          winner: finalScores[0] ? {
+            playerId: finalScores[0].playerId,
+            nickname: finalScores[0].nickname,
+            totalScore: finalScores[0].totalScore,
+          } : null,
+        },
+      });
+
+      return;
+    }
+
+    // Update to next question
+    await db
+      .update(sessions)
+      .set({
+        currentQuestionId: nextQuestion.id,
+        updatedAt: new Date(),
+      })
+      .where(eq(sessions.code, sessionCode))
+      .returning();
+
+    // Clear any existing timeout for this session
+    const existingTimeout = activeTimeouts.get(sessionCode);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+
+    // Set up question timeout and track start time
+    const timeLimit = (nextQuestion.timeLimit || 30) * 1000;
+    const timeout = setTimeout(() => {
+      handleQuestionTimeout(sessionCode, nextQuestion.id, db, ws);
+      activeTimeouts.delete(sessionCode);
+    }, timeLimit);
+    
+    activeTimeouts.set(sessionCode, timeout);
+    questionStartTimes.set(sessionCode, Date.now());
+    console.log(`Set timeout for auto-progressed question ${nextQuestion.id} (${timeLimit}ms)`);
+
+    // Broadcast question revealed event
+    ws.broadcastToRoom(sessionCode, {
+      type: 'question_revealed',
+      sessionCode,
+      timestamp: new Date().toISOString(),
+      data: {
+        questionNumber: currentIndex + 2,
+        totalQuestions: sortedQuestions.length,
+        question: {
+          id: nextQuestion.id,
+          text: nextQuestion.question,
+          options: nextQuestion.options,
+          timeLimit: nextQuestion.timeLimit || 30,
+        },
+      },
+    });
+
+    console.log(`Auto-progressed to question ${currentIndex + 2} for session ${sessionCode}`);
+  } catch (error) {
+    console.error('Error auto-progressing to next question:', error);
+  }
+}
+
 // Helper function to handle question timeout
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function handleQuestionTimeout(sessionCode: string, questionId: string, db: any, ws: IWebSocketManager) {
@@ -193,6 +324,12 @@ export async function handleQuestionTimeout(sessionCode: string, questionId: str
     // Reveal answer and complete question with timeout players
     const timeoutPlayerDeviceIds = unansweredPlayers.map((p: any) => p.deviceId);
     await revealAndCompleteQuestion(sessionCode, questionId, db, ws, timeoutPlayerDeviceIds);
+    
+    // Auto-progress to next question after a short delay
+    setTimeout(async () => {
+      console.log(`Auto-progressing to next question for session ${sessionCode}`);
+      await autoProgressToNextQuestion(sessionCode, db, ws);
+    }, 3000); // 3 second delay to show the answer
   } catch (error) {
     console.error('Error handling question timeout:', error);
   }

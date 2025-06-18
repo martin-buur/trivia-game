@@ -766,15 +766,15 @@ describe('Sessions API', () => {
       expect(timeoutAnswers[0].pointsEarned).toBe(0);
 
       // Check that both answer_revealed and question_completed were broadcast
-      const broadcastCalls = mockWsManager.broadcastToRoom.mock.calls;
+      const broadcastCalls = (mockWsManager.broadcastToRoom as any).mock.calls;
       
       const answerRevealedCall = broadcastCalls.find(
-        call => call[1].type === 'answer_revealed'
+        (call: any) => call[1].type === 'answer_revealed'
       );
       expect(answerRevealedCall).toBeTruthy();
       
       const questionCompletedCall = broadcastCalls.find(
-        call => call[1].type === 'question_completed'
+        (call: any) => call[1].type === 'question_completed'
       );
       expect(questionCompletedCall).toBeTruthy();
       expect(questionCompletedCall?.[1].data.timeoutPlayers).toContain('player-2');
@@ -879,7 +879,117 @@ describe('Sessions API', () => {
     });
   });
 
+  describe('Auto-progression feature', () => {
+    it('should auto-progress to next question after timeout', async () => {
+      // Create session with 2 questions
+      const [sessionData] = await db
+        .insert(sessions)
+        .values({
+          code: 'AUTOPROG',
+          hostDeviceId: 'host-123',
+          questionPackId: testPack.id,
+          status: 'playing',
+          currentQuestionId: testQuestions[0].id,
+        })
+        .returning();
+
+      // Add player
+      await db.insert(players).values({
+        sessionId: sessionData.id,
+        deviceId: 'player-1',
+        nickname: 'Alice',
+        score: 0,
+      });
+
+      // Mock the timeout handler
+      const { handleQuestionTimeout } = await import('../routes/sessions');
+      
+      // Clear any previous broadcasts
+      mockWsManager.clearEvents();
+      
+      // Call timeout handler
+      await handleQuestionTimeout('AUTOPROG', testQuestions[0].id, db, mockWsManager);
+      
+      // Wait for auto-progression delay (3 seconds)
+      await new Promise(resolve => setTimeout(resolve, 3500));
+      
+      // Check that question_revealed was broadcast for next question
+      const broadcastCalls = (mockWsManager.broadcastToRoom as any).mock.calls;
+      const questionRevealedCall = broadcastCalls.find(
+        (call: any) => call[1].type === 'question_revealed' && call[0] === 'AUTOPROG'
+      );
+      
+      expect(questionRevealedCall).toBeTruthy();
+      expect(questionRevealedCall?.[1].data.questionNumber).toBe(2);
+      expect(questionRevealedCall?.[1].data.question.id).toBe(testQuestions[1].id);
+    });
+
+    it('should end game after last question timeout', async () => {
+      // Create session on last question
+      const [sessionData] = await db
+        .insert(sessions)
+        .values({
+          code: 'AUTOEND',
+          hostDeviceId: 'host-123',
+          questionPackId: testPack.id,
+          status: 'playing',
+          currentQuestionId: testQuestions[2].id, // Last question
+        })
+        .returning();
+
+      // Add players
+      await db.insert(players).values([
+        {
+          sessionId: sessionData.id,
+          deviceId: 'player-1',
+          nickname: 'Alice',
+          score: 300,
+        },
+        {
+          sessionId: sessionData.id,
+          deviceId: 'player-2',
+          nickname: 'Bob',
+          score: 100,
+        },
+      ]);
+
+      // Mock the timeout handler
+      const { handleQuestionTimeout } = await import('../routes/sessions');
+      
+      // Clear any previous broadcasts
+      mockWsManager.clearEvents();
+      
+      // Call timeout handler
+      await handleQuestionTimeout('AUTOEND', testQuestions[2].id, db, mockWsManager);
+      
+      // Wait for auto-progression delay
+      await new Promise(resolve => setTimeout(resolve, 3500));
+      
+      // Check that game_finished was broadcast
+      const broadcastCalls = (mockWsManager.broadcastToRoom as any).mock.calls;
+      const gameFinishedCall = broadcastCalls.find(
+        (call: any) => call[1].type === 'game_finished' && call[0] === 'AUTOEND'
+      );
+      
+      expect(gameFinishedCall).toBeTruthy();
+      expect(gameFinishedCall?.[1].data.finalScores).toHaveLength(2);
+      expect(gameFinishedCall?.[1].data.winner.nickname).toBe('Alice');
+      expect(gameFinishedCall?.[1].data.winner.totalScore).toBe(300);
+      
+      // Check session status is finished
+      const updatedSession = await db.query.sessions.findFirst({
+        where: (sessions, { eq }) => eq(sessions.code, 'AUTOEND'),
+      });
+      expect(updatedSession?.status).toBe('finished');
+    });
+  });
+  
   describe('Auto-reveal feature', () => {
+    beforeEach(() => {
+      // Clear all mock events before each test
+      mockWsManager.clearEvents();
+    });
+
     it('should auto-reveal answer when timeout occurs', async () => {
       // Create session
       const [sessionData] = await db
@@ -894,7 +1004,7 @@ describe('Sessions API', () => {
         .returning();
 
       // Add players
-      const [player1, player2] = await db
+      const [player1] = await db
         .insert(players)
         .values([
           {
@@ -928,9 +1038,9 @@ describe('Sessions API', () => {
       await handleQuestionTimeout('AUTO01', testQuestions[0].id, db, mockWsManager);
 
       // Check that answer_revealed event was broadcast
-      const broadcastCalls = mockWsManager.broadcastToRoom.mock.calls;
+      const broadcastCalls = (mockWsManager.broadcastToRoom as any).mock.calls;
       const answerRevealedCall = broadcastCalls.find(
-        call => call[1].type === 'answer_revealed'
+        (call: any) => call[1].type === 'answer_revealed' && call[0] === 'AUTO01'
       );
       
       expect(answerRevealedCall).toBeTruthy();
@@ -944,7 +1054,7 @@ describe('Sessions API', () => {
 
       // Check that question_completed was also broadcast
       const questionCompletedCall = broadcastCalls.find(
-        call => call[1].type === 'question_completed'
+        (call: any) => call[1].type === 'question_completed' && call[0] === 'AUTO01'
       );
       
       expect(questionCompletedCall).toBeTruthy();
@@ -954,10 +1064,9 @@ describe('Sessions API', () => {
       expect(timeoutPlayers).not.toContain('player-1');
     });
 
-    // Skip this test for now - it has timing issues with fake timers
+    // Skip this test - has timing issues with fake timers and HTTP requests
     it.skip('should auto-reveal answer when all players answer and 5 seconds have passed', async () => {
-      // This test is flaky due to complex timer interactions
-      // The feature works correctly in manual testing and E2E tests
+      // This functionality is tested in E2E tests where real timers work better
     });
 
     it('should schedule auto-reveal after 5 seconds when all players answer quickly', async () => {
@@ -1007,9 +1116,9 @@ describe('Sessions API', () => {
       });
 
       // Should not reveal immediately
-      let broadcastCalls = mockWsManager.broadcastToRoom.mock.calls;
+      let broadcastCalls = (mockWsManager.broadcastToRoom as any).mock.calls;
       let answerRevealedCall = broadcastCalls.find(
-        call => call[1].type === 'answer_revealed' && call[0] === 'AUTO03'
+        (call: any) => call[1].type === 'answer_revealed' && call[0] === 'AUTO03'
       );
       
       expect(answerRevealedCall).toBeFalsy();
@@ -1021,9 +1130,9 @@ describe('Sessions API', () => {
       await vi.runAllTimersAsync();
 
       // Now it should have auto-revealed
-      broadcastCalls = mockWsManager.broadcastToRoom.mock.calls;
+      broadcastCalls = (mockWsManager.broadcastToRoom as any).mock.calls;
       answerRevealedCall = broadcastCalls.find(
-        call => call[1].type === 'answer_revealed' && call[0] === 'AUTO03'
+        (call: any) => call[1].type === 'answer_revealed' && call[0] === 'AUTO03'
       );
       
       expect(answerRevealedCall).toBeTruthy();
